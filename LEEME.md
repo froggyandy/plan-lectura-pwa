@@ -40,7 +40,9 @@ En Ajustes:
 Haz una copia de vez en cuando y guárdala en tu Drive.
 
 ## Actualizarla
-Si cambias `index.html`, sube la nueva versión. La app la descarga sola la próxima vez que la abras con conexión. Para forzar que se descargue todo de nuevo (íconos, manifiesto), sube la versión en `sw.js`: `const CACHE = 'plan-lectura-v3';`.
+Si cambias `index.html`, sube la nueva versión. La app la descarga sola la próxima vez que la abras con conexión. Para forzar que se descargue todo de nuevo (íconos, manifiesto), sube la versión en `sw.js`: `const CACHE = 'plan-lectura-v4';`.
+
+El ícono del iPhone (`icons/apple-touch-icon.png`, 180×180) es distinto del de PC y Android (`icon-192`, `icon-512` y `maskable-512`, que usa el manifiesto). Se puede cambiar uno sin tocar los otros. Para que el iPhone tome un ícono nuevo hay que borrar la app de la pantalla de inicio y volver a agregarla desde Safari.
 
 ## Probarla en este PC
 - `.claude/serve.ps1` sirve la carpeta en `http://localhost:8123` (no se publica).

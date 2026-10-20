@@ -1,6 +1,6 @@
 // Service worker del plan de lectura.
 // Para forzar que los teléfonos descarguen todo de nuevo tras un cambio, sube el número de versión.
-const CACHE = 'plan-lectura-v2';
+const CACHE = 'plan-lectura-v3';
 const FONT_CACHE = 'plan-lectura-fuentes';
 const SDK_CACHE = 'plan-lectura-firebase';
 const ASSETS = [
