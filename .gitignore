@@ -1,0 +1,6 @@
+# Herramientas locales (servidor de prueba)
+.claude/
+
+# El plan personal nunca se publica: vive fuera de esta carpeta y se carga en el teléfono.
+mi-plan*.json
+_prueba-plan.json

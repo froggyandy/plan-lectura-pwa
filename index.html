@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plan de lectura</title>
+<meta name="description" content="Programa de lectura con cronómetro, registro y progresión.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lectura">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F3F5F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1729" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&display=swap">
+<style>
+:root{
+  --paper:#F3F5F2;
+  --surface:#FFFFFF;
+  --ink:#1D2B53;
+  --ink-soft:#56617F;
+  --rule:#C3CFE3;
+  --rule-soft:#DCE3EE;
+  --margin:#B93D38;
+  --margin-line:#E3A19C;
+  --hi:#FFE35A;
+  --hi-ink:#1D2B53;
+  --focus:#2B59C3;
+  --serif:"Literata","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:"Atkinson Hyperlegible","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1729;--surface:#162038;--ink:#E6EAF4;--ink-soft:#A3ADC7;--rule:#33426A;--rule-soft:#222E4A;
+    --margin:#F08F86;--margin-line:#6E3A47;--hi:#E9D14A;--hi-ink:#0F1729;--focus:#93B2FF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1729;--surface:#162038;--ink:#E6EAF4;--ink-soft:#A3ADC7;--rule:#33426A;--rule-soft:#222E4A;
+  --margin:#F08F86;--margin-line:#6E3A47;--hi:#E9D14A;--hi-ink:#0F1729;--focus:#93B2FF;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{background:var(--paper);scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:1rem;line-height:1.5}
+button{font-family:inherit}
+[hidden]{display:none!important}
+
+/* Barra superior con pestañas */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--rule-soft)}
+.top-in{max-width:44rem;margin:0 auto;padding:.6rem 1.25rem .2rem;display:flex;align-items:baseline;gap:.8rem}
+.brand{flex:1;min-width:0;margin:0;font-family:var(--serif);font-weight:600;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{font-size:.8rem;color:var(--ink-soft);white-space:nowrap}
+.tabs{max-width:44rem;margin:0 auto;padding:0 1.25rem;display:flex;gap:.2rem}
+.tab{flex:1;font-size:.95rem;font-weight:700;color:var(--ink-soft);background:none;border:0;border-bottom:3px solid transparent;padding:.55rem .2rem .45rem;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--hi)}
+
+main{max-width:44rem;margin:0 auto;padding:0 1.25rem 4rem}
+.kicker{font-size:.92rem;color:var(--ink-soft);margin:1.6rem 0 .2rem}
+.h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,5.4vw,2.2rem);line-height:1.15;margin:1.6rem 0 .6rem}
+.h3{font-family:var(--serif);font-weight:600;font-size:1.25rem;line-height:1.3;margin:2rem 0 .5rem}
+.soft{color:var(--ink-soft)}
+.prose{max-width:36rem}
+.prose p{margin:0 0 .9rem}
+
+/* Semana */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:.3rem;margin:.9rem 0 .4rem;max-width:30rem}
+.day{display:flex;flex-direction:column;align-items:center;gap:.3rem}
+.dl{font-size:.78rem;color:var(--ink-soft)}
+.dn{position:relative;isolation:isolate;width:2.5rem;height:2.5rem;display:grid;place-items:center;font-family:var(--serif);font-size:1.05rem;border-radius:50%;border:1px dashed transparent;color:var(--ink-soft)}
+.day.planned .dn{border:1px solid var(--rule);color:var(--ink)}
+.day.done .dn{border-color:transparent;color:var(--hi-ink)}
+.day.done .dn::before{content:"";position:absolute;inset:5px -3px;z-index:-1;background:var(--hi);border-radius:4px 10px 5px 11px/11px 5px 10px 4px;transform:skewX(-9deg)}
+.day.part .dn::before{opacity:.42}
+.day.today .dl{color:var(--margin);font-weight:700}
+@media (max-width:380px){.dn{width:2.15rem;height:2.15rem;font-size:.95rem}}
+
+.today-title{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,5.2vw,2.1rem);line-height:1.15;margin:1.7rem 0 .25rem}
+.anchor{color:var(--ink-soft);margin:0 0 .4rem}
+.banner{border-left:3px solid var(--margin);padding:.7rem .95rem;margin:1.1rem 0;background:var(--surface);border-radius:0 .4rem .4rem 0;max-width:36rem}
+.banner p{margin:0}
+.field{margin:1.15rem 0}
+.field-label{font-family:var(--serif);font-size:1.05rem;font-weight:500;margin:0 0 .45rem}
+.q-help{font-size:.9rem;color:var(--ink-soft);margin:.25rem 0 0}
+
+/* Opciones con resaltador */
+.opts{display:flex;flex-wrap:wrap;gap:.45rem}
+.opt{position:relative;isolation:isolate;font-size:.95rem;line-height:1.3;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:.45rem;padding:.55rem .8rem;min-height:2.65rem;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent}
+.opt::before{content:"";position:absolute;inset:3px -2px;z-index:-1;background:var(--hi);border-radius:3px 9px 4px 10px/10px 4px 9px 3px;transform:skewX(-9deg) scaleX(0);transform-origin:left center;transition:transform .2s cubic-bezier(.3,.7,.4,1)}
+.opt[aria-pressed="true"]{border-color:transparent;color:var(--hi-ink)}
+.opt[aria-pressed="true"]::before{transform:skewX(-9deg) scaleX(1)}
+
+.num,.line,.date{font:inherit;font-size:1.05rem;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);border-radius:0;padding:.4rem .1rem}
+.num{width:7rem}
+.line{width:100%;max-width:30rem}
+.num:focus,.line:focus,.date:focus{outline:none;border-bottom:2px solid var(--focus);padding-bottom:calc(.4rem - 1px)}
+.ruled{--lh:1.8rem;display:block;width:100%;max-width:36rem;font:inherit;font-size:1rem;line-height:var(--lh);color:var(--ink);background-color:transparent;background-image:linear-gradient(to bottom,transparent calc(var(--lh) - 1px),var(--rule) calc(var(--lh) - 1px),var(--rule) var(--lh));background-size:100% var(--lh);background-attachment:local;border:0;border-radius:0;padding:0 .15rem;resize:none;overflow:hidden;min-height:calc(var(--lh) * 3)}
+.ruled:focus{outline:2px solid var(--focus);outline-offset:5px}
+::placeholder{color:var(--ink-soft);opacity:.7}
+.row{display:flex;flex-wrap:wrap;gap:1.4rem;align-items:flex-end}
+
+/* Botones */
+.btn{font-size:1.02rem;font-weight:700;color:var(--paper);background:var(--ink);border:0;border-radius:.5rem;padding:.9rem 1.3rem;cursor:pointer;line-height:1.25}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn-ghost{font-size:1rem;font-weight:700;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:.5rem;padding:.8rem 1.15rem;cursor:pointer;line-height:1.25}
+.btn-quiet{font-size:.92rem;color:var(--ink-soft);background:none;border:0;padding:.4rem 0;text-decoration:underline;text-underline-offset:.2em;cursor:pointer}
+.btn-quiet.danger{color:var(--margin)}
+.actions{display:flex;flex-wrap:wrap;gap:.9rem 1.2rem;align-items:center;margin:1.5rem 0}
+.opt:focus-visible,.btn:focus-visible,.btn-ghost:focus-visible,.btn-quiet:focus-visible,.tab:focus-visible,.markbtn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* Sesión en curso */
+.clock{font-family:var(--serif);font-size:clamp(3.6rem,17vw,5.8rem);font-weight:500;font-variant-numeric:tabular-nums;line-height:1;margin:1rem 0 .5rem}
+.goal{color:var(--ink-soft);margin:0 0 .55rem}
+.goalbar{height:6px;background:var(--rule-soft);border-radius:3px;overflow:hidden;max-width:30rem}
+.goalfill{height:100%;width:0;background:var(--hi);transition:width .9s linear}
+.reached{font-family:var(--serif);font-size:1.15rem;margin:1rem 0 0}
+.marks3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;margin:1.5rem 0 .5rem;max-width:34rem}
+.markbtn{min-height:5.2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;font-size:.95rem;font-weight:700;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:.6rem;cursor:pointer;padding:.5rem .3rem;-webkit-tap-highlight-color:transparent}
+.markbtn .mc{font-family:var(--serif);font-weight:500;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.markbtn:active{background:var(--rule-soft)}
+
+/* Progreso */
+.bookbar{height:8px;background:var(--rule-soft);border-radius:4px;overflow:hidden;margin:.45rem 0 .2rem;max-width:30rem}
+.bookfill{height:100%;background:var(--hi)}
+.chart{display:block;width:100%;max-width:36rem;height:auto;margin:.6rem 0}
+.chart .b{fill:var(--rule)}
+.chart .b.buena{fill:var(--hi)}
+.chart .b.cur{fill:transparent;stroke:var(--ink);stroke-width:1.4;stroke-dasharray:3 3}
+.chart .goal-line{stroke:var(--margin);stroke-width:1;stroke-dasharray:4 4}
+.chart text{fill:var(--ink-soft);font-family:var(--sans);font-size:11px}
+.list{list-style:none;padding:0;margin:.6rem 0;max-width:36rem}
+.list li{padding:.7rem 0;border-top:1px solid var(--rule-soft)}
+.li-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
+.li-meta{color:var(--ink-soft);font-size:.9rem;margin-top:.15rem}
+.tag{font-size:.8rem;padding:.08rem .5rem;border-radius:.3rem;border:1px solid var(--rule);white-space:nowrap}
+.tag.buena{background:var(--hi);border-color:transparent;color:var(--hi-ink)}
+.tag.floja{border-color:var(--margin);color:var(--margin)}
+
+/* Plan */
+.plan ul{padding-left:1.15rem;margin:.3rem 0 0;max-width:36rem}
+.plan li{margin:.5rem 0}
+.plan li::marker{color:var(--margin)}
+
+.toast{position:fixed;left:50%;bottom:calc(1.2rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:calc(100% - 2rem);background:var(--ink);color:var(--paper);padding:.6rem 1rem;border-radius:.5rem;font-size:.92rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <p class="brand">Plan de lectura</p>
+    <span class="status" id="status"></span>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Secciones">
+    <button type="button" class="tab" role="tab" data-tab="hoy">Hoy</button>
+    <button type="button" class="tab" role="tab" data-tab="plan">Plan</button>
+    <button type="button" class="tab" role="tab" data-tab="progreso">Progreso</button>
+    <button type="button" class="tab" role="tab" data-tab="ajustes">Ajustes</button>
+  </nav>
+</header>
+<main id="main"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- Constantes ---------- */
+
+const pad2 = n => String(n).padStart(2, '0');
+const DAY_SHORT = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'];
+const DAY_LONG = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const DAY_PLURAL = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
+const joinY = arr => arr.length <= 1 ? (arr[0] || '') : `${arr.slice(0, -1).join(', ')} y ${arr[arr.length - 1]}`;
+const FEELS = ['Bien', 'Neutral', 'Inquieto', 'Con ansiedad'];
+const PLACES = ['En casa', 'En un café', 'En el transporte', 'Otro lugar'];
+const SLEEP_OPTS = ['No', 'Un poco', 'Sí'];
+const MOMENTS = ['Mañana', 'Mediodía', 'Tarde', 'Noche'];
+const SLEPT = ['Poco', 'Normal', 'Mucho'];
+function momentOf(ts) { const hr = new Date(ts).getHours(); return hr < 12 ? 'Mañana' : hr < 15 ? 'Mediodía' : hr < 19 ? 'Tarde' : 'Noche'; }
+const KIND_LABEL = {normal: 'Normal', cafe: 'Café', descarga: 'Descarga'};
+const KINDS = ['normal', 'cafe', 'descarga'];
+// Valores genéricos: los tuyos llegan con el plan personal (mi-plan.json), que no se publica.
+const DEFAULT_SETTINGS = {
+  bookA: '', totalA: 0, pageA: 0,
+  bookB: '', totalB: 0, pageB: 0,
+  start: mondayOf(ymd(new Date())), base: 20, days: [1, 2, 3, 4, 5], cafeDay: -1,
+  maxMin: 40, step: 5, weeks: 12
+};
+
+/* ---------- Fechas ---------- */
+
+function ymd(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+const todayStr = () => ymd(new Date());
+function parts(s) { const [y, m, d] = String(s).split('-').map(Number); return {y, m, d}; }
+function dayNum(s) { const {y, m, d} = parts(s); return Math.round(Date.UTC(y, m - 1, d) / 86400000); }
+function validYmd(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(dayNum(s)); }
+function fromDayNum(n) { const dt = new Date(n * 86400000); return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`; }
+function dowOf(s) { return new Date(dayNum(s) * 86400000).getUTCDay(); }
+function mondayOf(s) { return fromDayNum(dayNum(s) - (dowOf(s) + 6) % 7); }
+function fmtLong(s) { const {m, d} = parts(s); return `${DAY_LONG[dowOf(s)]} ${d} de ${MONTHS[m - 1]}`; }
+function fmtShort(s) { const {m, d} = parts(s); return `${d} ${MONTHS_SHORT[m - 1]}`; }
+function fmtDateTime(ts) {
+  try { return new Date(ts).toLocaleString('es-CO', {dateStyle: 'long', timeStyle: 'short'}); }
+  catch (e) { return new Date(ts).toISOString(); }
+}
+function fmtClock(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const hr = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+  return hr ? `${hr}:${pad2(m)}:${pad2(r)}` : `${m}:${pad2(r)}`;
+}
+function fmtDur(ms) {
+  const s = Math.max(0, Math.round((ms || 0) / 1000));
+  const m = Math.floor(s / 60), r = s % 60;
+  if (!m) return `${r} s`;
+  return r ? `${m} min ${pad2(r)} s` : `${m} min`;
+}
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+const toInt = v => { const n = parseInt(v, 10); return Number.isNaN(n) ? 0 : n; };
+
+/* ---------- Estado ---------- */
+
+const STORE_KEY = 'plan-lectura-v1';
+const freshSettings = () => Object.assign({}, DEFAULT_SETTINGS, {days: DEFAULT_SETTINGS.days.slice()});
+const freshState = () => ({v: 1, settings: freshSettings(), sessions: [], active: null, pending: null, manual: null, flags: {descarga: false}, plan: null, tab: 'hoy', updatedAt: 0});
+const clone = o => JSON.parse(JSON.stringify(o));
+
+function normalize(raw) {
+  const out = freshState();
+  if (!raw || typeof raw !== 'object') return out;
+  const st = Object.assign(freshSettings(), raw.settings && typeof raw.settings === 'object' ? raw.settings : {});
+  ['totalA', 'pageA', 'totalB', 'pageB', 'base', 'maxMin', 'step', 'weeks'].forEach(k => { st[k] = Math.max(0, toInt(st[k])); });
+  st.base = Math.min(60, Math.max(5, st.base || 20));
+  st.maxMin = Math.max(st.base, st.maxMin || 40);
+  st.step = st.step || 5;
+  st.weeks = st.weeks || 12;
+  st.bookA = typeof st.bookA === 'string' ? st.bookA : '';
+  st.bookB = typeof st.bookB === 'string' ? st.bookB : '';
+  if (!validYmd(st.start)) st.start = DEFAULT_SETTINGS.start;
+  st.days = Array.isArray(st.days) ? [...new Set(st.days.map(Number).filter(d => d >= 0 && d <= 6))] : DEFAULT_SETTINGS.days.slice();
+  if (!st.days.length) st.days = DEFAULT_SETTINGS.days.slice();
+  st.cafeDay = Number.isInteger(st.cafeDay) && st.days.includes(st.cafeDay) ? st.cafeDay : -1;
+  out.settings = st;
+  out.sessions = Array.isArray(raw.sessions)
+    ? raw.sessions.filter(x => x && validYmd(x.date) && typeof x.durationMs === 'number' && x.durationMs >= 0)
+    : [];
+  out.sessions.forEach(x => {
+    if (!KINDS.includes(x.kind)) x.kind = 'normal';
+    if (x.book !== 'B') x.book = 'A';
+    if (!Array.isArray(x.marks)) x.marks = [];
+    if (!x.counts || typeof x.counts !== 'object') x.counts = countMarks(x.marks);
+  });
+  out.sessions.sort((a, b) => (a.startedAt || 0) - (b.startedAt || 0));
+  out.active = raw.active && typeof raw.active.startedAt === 'number' ? Object.assign({marks: [], goal: st.base, kind: 'normal', book: 'A'}, raw.active) : null;
+  if (out.active && !Array.isArray(out.active.marks)) out.active.marks = [];
+  out.pending = raw.pending && typeof raw.pending.durationMs === 'number' ? raw.pending : null;
+  if (out.pending) {
+    if (!Array.isArray(out.pending.marks)) out.pending.marks = [];
+    if (!out.pending.form || typeof out.pending.form !== 'object') out.pending.form = {pageTo: out.pending.pageFrom || 0, feel: null, place: 'En casa', note: ''};
+  }
+  out.manual = raw.manual && typeof raw.manual === 'object' ? raw.manual : null;
+  out.flags = Object.assign({descarga: false}, raw.flags && typeof raw.flags === 'object' ? raw.flags : {});
+  out.plan = normalizePlan(raw.plan);
+  out.tab =['hoy', 'plan', 'progreso', 'ajustes'].includes(raw.tab) ? raw.tab : 'hoy';
+  out.updatedAt = typeof raw.updatedAt === 'number' ? raw.updatedAt : 0;
+  return out;
+}
+function countMarks(marks) {
+  const c = {d: 0, e: 0, s: 0};
+  (marks || []).forEach(m => { if (m && c[m.k] !== undefined) c[m.k] += 1; });
+  return c;
+}
+
+/* ---------- Plan personal ---------- */
+
+// El plan (textos y ajustes propios) vive solo en el teléfono: llega desde mi-plan.json y viaja en las copias.
+function normalizePlan(raw) {
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.secciones)) return null;
+  const str = v => (typeof v === 'string' ? v : '');
+  const strs = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string') : []);
+  const textos = {};
+  if (raw.textos && typeof raw.textos === 'object') {
+    for (const [k, v] of Object.entries(raw.textos)) if (typeof v === 'string' && v) textos[k] = v;
+  }
+  return {
+    titulo: str(raw.titulo),
+    intro: str(raw.intro),
+    secciones: raw.secciones.filter(x => x && typeof x === 'object').map(x => ({titulo: str(x.titulo), parrafos: strs(x.parrafos), lista: strs(x.lista)})),
+    textos
+  };
+}
+// Plantillas: {var} se reemplaza; {?var: texto} solo aparece si var tiene valor.
+function fill(tpl, vars) {
+  return String(tpl)
+    .replace(/\{\?(\w+):((?:[^{}]|\{\w+\})*)\}/g, (_, k, inner) => (vars[k] ? inner : ''))
+    .replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+}
+const txt = (key, fallback) => (state.plan && state.plan.textos[key]) || fallback;
+
+function loadLocal() {
+  try { const raw = localStorage.getItem(STORE_KEY); return raw ? normalize(JSON.parse(raw)) : null; }
+  catch (e) { return null; }
+}
+function saveLocal() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); return true; }
+  catch (e) { return false; }
+}
+
+let state = loadLocal() || freshState();
+let localOk = true;
+const S = () => state.settings;
+
+/* ---------- Guardado ---------- */
+
+function touch() {
+  state.updatedAt = Date.now();
+  localOk = saveLocal();
+  renderStatus();
+}
+async function askPersist() {
+  try {
+    if (navigator.storage && navigator.storage.persist) {
+      const already = navigator.storage.persisted ? await navigator.storage.persisted() : false;
+      if (!already) await navigator.storage.persist();
+    }
+  } catch (e) {}
+}
+
+/* ---------- Utilidades de interfaz ---------- */
+
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  if (props) {
+    for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'text') el.textContent = v;
+      else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : String(v));
+    }
+  }
+  for (const kid of kids.flat()) {
+    if (kid === null || kid === undefined || kid === false) continue;
+    el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+const SVGNS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, text) {
+  const el = document.createElementNS(SVGNS, tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) if (v !== null && v !== undefined) el.setAttribute(k, String(v));
+  if (text != null) el.textContent = text;
+  return el;
+}
+
+function pills(options, isOn, onPick, labels) {
+  const g = h('div', {class: 'opts', role: 'group'});
+  options.forEach((opt, i) => {
+    g.append(h('button', {type: 'button', class: 'opt', 'aria-pressed': String(isOn(opt)), onclick: () => onPick(opt)}, labels ? labels[i] : String(opt)));
+  });
+  return g;
+}
+function field(label, control, help) {
+  return h('div', {class: 'field'}, h('p', {class: 'field-label', text: label}), control, help ? h('p', {class: 'q-help', text: help}) : null);
+}
+function numInput(value, onInput, aria, min) {
+  const inp = h('input', {type: 'number', inputmode: 'numeric', class: 'num', min: String(min == null ? 0 : min), 'aria-label': aria});
+  inp.value = value === '' || value == null ? '' : String(value);
+  inp.addEventListener('input', () => onInput(inp.value));
+  return inp;
+}
+function textInput(value, onInput, aria, ph) {
+  const inp = h('input', {type: 'text', class: 'line', 'aria-label': aria, placeholder: ph || ''});
+  inp.value = value || '';
+  inp.addEventListener('input', () => onInput(inp.value));
+  return inp;
+}
+const growQueue = [];
+function noteArea(value, onInput, aria) {
+  const ta = h('textarea', {class: 'ruled', 'aria-label': aria, placeholder: 'Escribe aquí (opcional)'});
+  ta.value = value || '';
+  ta.addEventListener('input', () => { onInput(ta.value); autoGrow(ta); });
+  growQueue.push(ta);
+  return ta;
+}
+function autoGrow(ta) {
+  if (!ta || !ta.isConnected) return;
+  const lh = parseFloat(getComputedStyle(ta).lineHeight) || 28.8;
+  ta.style.height = 'auto';
+  const lines = Math.max(3, Math.ceil((ta.scrollHeight - 1) / lh));
+  ta.style.height = (lines * lh) + 'px';
+}
+function twoTap(btn, label, confirmLabel, action) {
+  let armed = false, timer = null;
+  btn.textContent = label;
+  btn.addEventListener('click', () => {
+    if (!armed) {
+      armed = true;
+      btn.textContent = confirmLabel;
+      timer = setTimeout(() => { armed = false; btn.textContent = label; }, 4000);
+    } else {
+      clearTimeout(timer);
+      armed = false;
+      action();
+    }
+  });
+  return btn;
+}
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+function scrollTop() { try { window.scrollTo(0, 0); } catch (e) {} }
+
+/* ---------- Lógica del programa ---------- */
+
+const weekOf = date => Math.floor((dayNum(date) - dayNum(S().start)) / 7) + 1;
+const currentWeek = () => weekOf(todayStr());
+const weekDates = w => { const base = dayNum(S().start) + (w - 1) * 7; return Array.from({length: 7}, (_, i) => fromDayNum(base + i)); };
+const minutesOf = x => (x.durationMs || 0) / 60000;
+const countsOf = x => x.counts || countMarks(x.marks);
+const goodThreshold = () => Math.max(1, S().days.length - 1);
+const bookName = b => (b === 'B' ? (S().bookB || 'Libro B') : (S().bookA || 'Libro principal'));
+const goalFor = (kind, target) => (kind === 'descarga' ? 10 : kind === 'cafe' ? target + 15 : target);
+function isComplete(x, target) { return minutesOf(x) >= (x.kind === 'descarga' ? 10 : target) - 0.5; }
+
+function weekStats(w, target) {
+  const list = state.sessions.filter(x => weekOf(x.date) === w);
+  const done = new Set(), any = new Set();
+  let minutes = 0, d = 0;
+  list.forEach(x => {
+    any.add(x.date);
+    minutes += minutesOf(x);
+    d += countsOf(x).d;
+    if (isComplete(x, target)) done.add(x.date);
+  });
+  return {count: done.size, doneDays: done, anyDays: any, minutes, d, sessions: list.length};
+}
+
+function progression() {
+  const st = S();
+  let target = st.base, good = 0, bad = 0;
+  const weeks = [];
+  const cur = currentWeek();
+  for (let w = 1; w < cur; w++) {
+    const ws = weekStats(w, target);
+    const status = ws.count >= goodThreshold() ? 'buena' : (ws.count <= 2 ? 'floja' : 'regular');
+    weeks.push(Object.assign({w, target, status}, ws));
+    if (status === 'buena') {
+      good += 1; bad = 0;
+      if (good >= 2) { target = Math.min(st.maxMin, target + st.step); good = 0; }
+    } else if (status === 'floja') {
+      bad += 1; good = 0;
+      if (bad >= 2) { target = Math.max(10, target - st.step); bad = 0; }
+    } else {
+      good = 0; bad = 0;
+    }
+  }
+  return {target, good, bad, weeks, cur};
+}
+
+function nextStepText(p) {
+  const st = S();
+  const next = Math.min(st.maxMin, p.target + st.step);
+  let t;
+  if (p.target >= st.maxMin) t = `Estás en el tope del bloque: ${st.maxMin} minutos.`;
+  else if (p.good === 1) t = `Si esta semana es buena, la próxima subes a ${next} minutos.`;
+  else t = `Con dos semanas buenas seguidas subes a ${next} minutos.`;
+  if (p.bad === 1) t += ' La semana pasada fue floja: si esta también lo es, bajas 5 minutos para ajustar la carga.';
+  return t;
+}
+
+function suggestedKind() {
+  if (state.flags.descarga) return 'descarga';
+  if (S().cafeDay >= 0 && dowOf(todayStr()) === S().cafeDay) return 'cafe';
+  return 'normal';
+}
+function lastTwoAnxious() {
+  const s = state.sessions.slice(-2);
+  return s.length === 2 && s.every(x => x.feel === 'Con ansiedad');
+}
+
+/* ---------- Audio y pantalla ---------- */
+
+let audioCtx = null;
+function primeAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC && !audioCtx) audioCtx = new AC();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { audioCtx = null; }
+}
+function chime() {
+  try {
+    if (audioCtx) {
+      const t0 = audioCtx.currentTime + 0.05;
+      [[660, 0], [880, 0.38]].forEach(([f, dt]) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t0 + dt);
+        g.gain.exponentialRampToValueAtTime(0.22, t0 + dt + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.9);
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start(t0 + dt);
+        o.stop(t0 + dt + 1);
+      });
+    }
+  } catch (e) {}
+  try { if (navigator.vibrate) navigator.vibrate([180, 90, 180]); } catch (e) {}
+}
+let wake = null;
+async function requestWake() {
+  try { if (navigator.wakeLock && navigator.wakeLock.request) wake = await navigator.wakeLock.request('screen'); }
+  catch (e) { wake = null; }
+}
+function releaseWake() { try { if (wake) wake.release(); } catch (e) {} wake = null; }
+
+/* ---------- Render general ---------- */
+
+const main = document.getElementById('main');
+const statusEl = document.getElementById('status');
+let clockTimer = null;
+let draft = null;
+
+function render() {
+  clearInterval(clockTimer);
+  clockTimer = null;
+  growQueue.length = 0;
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === state.tab)));
+  let nodes;
+  if (state.tab === 'plan') nodes = viewPlan();
+  else if (state.tab === 'progreso') nodes = viewProgreso();
+  else if (state.tab === 'ajustes') nodes = viewAjustes();
+  else nodes = viewHoy();
+  main.replaceChildren(...nodes);
+  requestAnimationFrame(() => growQueue.splice(0).forEach(autoGrow));
+  renderStatus();
+}
+function renderStatus() {
+  statusEl.textContent = localOk ? 'Guardado' : 'Sin guardar';
+}
+function setTab(tab) {
+  if (tab !== 'hoy') draft = null;
+  state.tab = tab;
+  saveLocal();
+  render();
+  scrollTop();
+}
+
+/* ---------- Hoy ---------- */
+
+function weekStrip(w, target) {
+  const dates = weekDates(w);
+  const ws = weekStats(w, target);
+  const today = todayStr();
+  const strip = h('div', {class: 'week', role: 'list', 'aria-label': 'Esta semana'});
+  dates.forEach(date => {
+    const dow = dowOf(date);
+    const planned = S().days.includes(dow);
+    const done = ws.doneDays.has(date);
+    const part = !done && ws.anyDays.has(date);
+    const cls = ['day', planned ? 'planned' : '', (done || part) ? 'done' : '', part ? 'part' : '', date === today ? 'today' : ''].filter(Boolean).join(' ');
+    const dayLabel = done ? 'sesión completa' : part ? 'sesión incompleta' : planned ? 'día de lectura' : 'descanso';
+    strip.append(h('div', {class: cls, role: 'listitem', 'aria-label': `${fmtLong(date)}: ${dayLabel}`},
+      h('span', {class: 'dl', 'aria-hidden': 'true', text: DAY_SHORT[dow]}),
+      h('span', {class: 'dn', 'aria-hidden': 'true', text: String(parts(date).d)})
+    ));
+  });
+  return strip;
+}
+
+function viewHoy() {
+  if (state.active) return viewRunning();
+  if (state.pending) return viewEnd();
+  if (state.manual) return viewManual();
+
+  const st = S();
+  const today = todayStr();
+  const p = progression();
+  const w = p.cur;
+  const out = [];
+
+  if (w < 1) out.push(h('p', {class: 'kicker', text: `El bloque empieza el ${fmtLong(st.start)}. Lo que leas antes cuenta como previa.`}));
+  else if (w > st.weeks) out.push(h('p', {class: 'kicker', text: `Terminaste las ${st.weeks} semanas del bloque.`}));
+  else out.push(h('p', {class: 'kicker', text: `Semana ${w} de ${st.weeks}`}));
+
+  const shownWeek = w < 1 ? 1 : w;
+  out.push(weekStrip(shownWeek, p.target));
+  if (w >= 1) {
+    const ws = weekStats(w, p.target);
+    out.push(h('p', {class: 'soft', text: `Esta semana: ${ws.count} de ${st.days.length} sesiones completas. Es buena desde ${goodThreshold()}.`}));
+  }
+
+  if (w > st.weeks) {
+    out.push(h('div', {class: 'banner'}, h('p', {text: 'Escríbeme en el chat que terminaste el bloque y armamos el siguiente con tus datos.'})));
+  }
+
+  if (!draft) draft = {kind: suggestedKind(), book: 'A', pageFrom: st.pageA};
+  const goal = goalFor(draft.kind, p.target);
+  const dow = dowOf(today);
+  const planned = st.days.includes(dow);
+  const doneToday = state.sessions.some(x => x.date === today);
+
+  let title;
+  if (doneToday) title = 'Ya leíste hoy';
+  else if (draft.kind === 'descarga') title = 'Hoy toca descarga: 10 minutos';
+  else if (draft.kind === 'cafe') title = `Hoy toca café: ${goal} minutos`;
+  else if (!planned) title = 'Hoy es día de descanso';
+  else title = `Hoy: ${goal} minutos`;
+  out.push(h('h1', {class: 'today-title', text: title}));
+
+  if (doneToday) out.push(h('p', {class: 'anchor', text: 'Una sesión por día es lo que cuenta. Si quieres leer más, adelante, pero mañana sigue el plan.'}));
+  else if (!planned) out.push(h('p', {class: 'anchor', text: 'Si te falta una sesión de esta semana, puedes recuperarla hoy.'}));
+  else out.push(h('p', {class: 'anchor', text: draft.kind === 'cafe' ? txt('anclaCafe', 'Tu sesión larga de la semana: 15 minutos más.') : txt('ancla', 'En tu momento de siempre, con la atención fresca.')}));
+
+  if (lastTwoAnxious()) {
+    out.push(h('div', {class: 'banner'}, h('p', {text: 'Tus dos últimas sesiones terminaron con ansiedad. Cuéntamelo en el chat y ajustamos el plan.'})));
+  } else if (state.flags.descarga) {
+    out.push(h('div', {class: 'banner'}, h('p', {text: txt('descarga', 'Tu última sesión terminó con ansiedad, así que hoy toca descarga: 10 minutos, con tu libro B si lo tienes. Cuenta como sesión completa.')})));
+  }
+
+  out.push(field('Tipo de sesión', pills(KINDS, k => draft.kind === k, k => { draft.kind = k; render(); }, KINDS.map(k => k === 'cafe' ? 'Café (larga)' : k === 'descarga' ? 'Descarga (10 min)' : 'Normal'))));
+  if (st.bookB) {
+    out.push(field('Libro', pills(['A', 'B'], b => draft.book === b, b => { draft.book = b; draft.pageFrom = b === 'B' ? st.pageB : st.pageA; render(); }, [bookName('A'), bookName('B')])));
+  }
+  out.push(field('¿En qué página empiezas?', numInput(draft.pageFrom, v => { draft.pageFrom = toInt(v); }, 'Página de inicio', 0)));
+
+  out.push(h('div', {class: 'actions'},
+    h('button', {type: 'button', class: doneToday ? 'btn-ghost' : 'btn', onclick: startSession}, `Empezar sesión de ${goal} minutos`),
+    h('button', {type: 'button', class: 'btn-quiet', onclick: openManual}, 'Registrar una sesión sin cronómetro')
+  ));
+  out.push(h('p', {class: 'soft', text: `Duración actual del plan: ${p.target} minutos. ${nextStepText(p)}`}));
+  return out;
+}
+
+function startSession() {
+  primeAudio();
+  const p = progression();
+  const d = draft || {kind: suggestedKind(), book: 'A', pageFrom: S().pageA};
+  state.active = {startedAt: Date.now(), kind: d.kind, book: d.book, pageFrom: toInt(d.pageFrom), goal: goalFor(d.kind, p.target), marks: [], chimed: false};
+  draft = null;
+  touch();
+  render();
+  requestWake();
+  scrollTop();
+}
+
+function viewRunning() {
+  const a = state.active;
+  const c = countMarks(a.marks);
+  const out = [];
+  out.push(h('p', {class: 'kicker', text: `${bookName(a.book)}, desde la página ${a.pageFrom || '?'}`}));
+  out.push(h('p', {class: 'clock', id: 'clock', text: fmtClock(Date.now() - a.startedAt)}));
+  out.push(h('p', {class: 'goal', text: `Objetivo: ${a.goal} minutos`}));
+  out.push(h('div', {class: 'goalbar', 'aria-hidden': 'true'}, h('div', {class: 'goalfill', id: 'goalFill'})));
+  out.push(h('p', {class: 'reached', id: 'reached', hidden: true, text: `Cumpliste los ${a.goal} minutos. Puedes seguir o terminar aquí.`}));
+  const mk = (k, label) => h('button', {type: 'button', class: 'markbtn', onclick: () => addMark(k)},
+    h('span', {text: label}), h('span', {class: 'mc', id: 'cnt-' + k, text: String(c[k])}));
+  out.push(h('div', {class: 'marks3'}, mk('d', 'Me desconecté'), mk('e', 'Espejo'), mk('s', 'Sueño')));
+  out.push(h('p', {class: 'soft', text: 'Celular boca abajo. Tocas, vuelves a la última frase que recuerdes y sigues.'}));
+  out.push(h('div', {class: 'actions'},
+    h('button', {type: 'button', class: 'btn', onclick: endSession}, 'Terminar sesión'),
+    twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Cancelar', 'Toca otra vez: se pierde esta sesión', () => {
+      state.active = null;
+      releaseWake();
+      touch();
+      render();
+    })
+  ));
+  clockTimer = setInterval(tick, 1000);
+  setTimeout(tick, 0);
+  return out;
+}
+function tick() {
+  const a = state.active;
+  if (!a) return;
+  const ms = Date.now() - a.startedAt;
+  const el = document.getElementById('clock');
+  if (el) el.textContent = fmtClock(ms);
+  const fill = document.getElementById('goalFill');
+  if (fill) fill.style.width = Math.min(100, (ms / (a.goal * 60000)) * 100) + '%';
+  if (ms >= a.goal * 60000) {
+    const r = document.getElementById('reached');
+    if (r) r.hidden = false;
+    if (!a.chimed) { a.chimed = true; saveLocal(); chime(); }
+  }
+}
+function addMark(k) {
+  const a = state.active;
+  if (!a) return;
+  const t = Date.now() - a.startedAt;
+  a.marks.push({k, t});
+  touch();
+  const el = document.getElementById('cnt-' + k);
+  if (el) el.textContent = String(countMarks(a.marks)[k]);
+  const label = k === 'd' ? 'desconexión' : k === 'e' ? 'espejo' : 'sueño';
+  toast(`Anotado: ${label} a los ${fmtClock(t)}`);
+}
+function endSession() {
+  const a = state.active;
+  if (!a) return;
+  const now = Date.now();
+  state.pending = {
+    startedAt: a.startedAt, endedAt: now, durationMs: now - a.startedAt,
+    kind: a.kind, book: a.book, pageFrom: a.pageFrom, goal: a.goal, marks: a.marks.slice(),
+    form: {pageTo: a.pageFrom || 0, feel: null, place: a.kind === 'cafe' ? 'En un café' : 'En casa', note: '', slept: null}
+  };
+  state.active = null;
+  releaseWake();
+  touch();
+  render();
+  scrollTop();
+}
+
+function viewEnd() {
+  const pd = state.pending;
+  const f = pd.form;
+  const c = countMarks(pd.marks);
+  const reached = pd.durationMs / 60000 >= pd.goal - 0.5;
+  const out = [];
+  out.push(h('h1', {class: 'today-title', text: `Leíste ${fmtDur(pd.durationMs)}`}));
+  out.push(h('p', {class: 'anchor', text: `${plural(c.d, 'desconexión', 'desconexiones')}, ${plural(c.e, 'espejo', 'espejos')} y ${plural(c.s, 'momento de sueño', 'momentos de sueño')}.`}));
+  out.push(h('p', {class: 'soft', text: reached ? 'Cumpliste tu objetivo: cuenta como sesión completa.' : `No llegaste a los ${pd.goal} minutos. Queda registrada, pero no cuenta como completa.`}));
+  out.push(field('¿En qué página quedaste?', numInput(f.pageTo, v => { f.pageTo = toInt(v); touch(); }, 'Página final', 0)));
+  out.push(field('¿Cómo terminaste?', pills(FEELS, x => f.feel === x, x => { f.feel = f.feel === x ? null : x; touch(); render(); })));
+  out.push(field('¿Cómo dormiste anoche?', pills(SLEPT, x => f.slept === x, x => { f.slept = f.slept === x ? null : x; touch(); render(); })));
+  out.push(field('¿Dónde leíste?', pills(PLACES, x => f.place === x, x => { f.place = x; touch(); render(); })));
+  out.push(field('¿Algo que notaste?', noteArea(f.note, v => { f.note = v; touch(); }, 'Nota de la sesión')));
+  out.push(h('div', {class: 'actions'},
+    h('button', {type: 'button', class: 'btn', onclick: savePending}, 'Guardar sesión'),
+    twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Descartar', 'Toca otra vez para descartarla', () => { state.pending = null; touch(); render(); })
+  ));
+  return out;
+}
+
+function updateBookPage(sess) {
+  const st = S();
+  if (!(sess.pageTo > 0)) return;
+  if (sess.book === 'B') st.pageB = Math.max(st.pageB || 0, sess.pageTo);
+  else st.pageA = Math.max(st.pageA || 0, sess.pageTo);
+}
+function commitSession(sess) {
+  state.sessions.push(sess);
+  state.sessions.sort((a, b) => (a.startedAt || 0) - (b.startedAt || 0));
+  updateBookPage(sess);
+  const last = state.sessions[state.sessions.length - 1];
+  state.flags.descarga = !!(last && last.feel === 'Con ansiedad');
+}
+function savePending() {
+  const pd = state.pending;
+  const f = pd.form;
+  commitSession({
+    id: 's' + pd.startedAt, date: ymd(new Date(pd.startedAt)), startedAt: pd.startedAt, durationMs: pd.durationMs,
+    kind: pd.kind, book: pd.book, goal: pd.goal, pageFrom: toInt(pd.pageFrom), pageTo: toInt(f.pageTo),
+    marks: pd.marks, counts: countMarks(pd.marks), feel: f.feel || null, place: f.place || null,
+    note: (f.note || '').trim(), manual: false, slept: f.slept || null, moment: momentOf(pd.startedAt)
+  });
+  state.pending = null;
+  touch();
+  render();
+  scrollTop();
+  toast('Sesión guardada');
+}
+
+function openManual() {
+  state.manual = {date: todayStr(), minutes: '', kind: 'normal', book: 'A', pageFrom: S().pageA, pageTo: '', d: 0, e: 0, sleep: 'No', feel: null, place: 'En casa', note: '', moment: null, slept: null};
+  touch();
+  render();
+  scrollTop();
+}
+function viewManual() {
+  const m = state.manual;
+  const st = S();
+  const out = [];
+  out.push(h('h1', {class: 'today-title', text: 'Registrar una sesión'}));
+  out.push(h('p', {class: 'anchor', text: 'Para sesiones que hiciste con la tarjeta y el lápiz, sin el cronómetro.'}));
+  const dateInp = h('input', {type: 'date', class: 'date', 'aria-label': 'Fecha'});
+  dateInp.value = m.date;
+  dateInp.addEventListener('input', () => { if (validYmd(dateInp.value)) { m.date = dateInp.value; touch(); } });
+  out.push(field('Fecha', dateInp));
+  out.push(field('Minutos leídos', numInput(m.minutes, v => { m.minutes = toInt(v); touch(); refreshManualBtn(); }, 'Minutos leídos', 1)));
+  out.push(field('Tipo de sesión', pills(KINDS, k => m.kind === k, k => { m.kind = k; touch(); render(); }, KINDS.map(k => KIND_LABEL[k]))));
+  if (st.bookB) out.push(field('Libro', pills(['A', 'B'], b => m.book === b, b => { m.book = b; m.pageFrom = b === 'B' ? st.pageB : st.pageA; touch(); render(); }, [bookName('A'), bookName('B')])));
+  out.push(h('div', {class: 'row'},
+    field('Página de inicio', numInput(m.pageFrom, v => { m.pageFrom = toInt(v); touch(); }, 'Página de inicio', 0)),
+    field('Página final', numInput(m.pageTo, v => { m.pageTo = toInt(v); touch(); }, 'Página final', 0))
+  ));
+  out.push(h('div', {class: 'row'},
+    field('Desconexiones', numInput(m.d, v => { m.d = toInt(v); touch(); }, 'Desconexiones', 0)),
+    field('Espejos', numInput(m.e, v => { m.e = toInt(v); touch(); }, 'Espejos', 0))
+  ));
+  out.push(field('¿Apareció el sueño?', pills(SLEEP_OPTS, x => m.sleep === x, x => { m.sleep = x; touch(); render(); })));
+  out.push(field('¿En qué momento del día?', pills(MOMENTS, x => m.moment === x, x => { m.moment = m.moment === x ? null : x; touch(); render(); })));
+  out.push(field('¿Cómo dormiste la noche anterior?', pills(SLEPT, x => m.slept === x, x => { m.slept = m.slept === x ? null : x; touch(); render(); })));
+  out.push(field('¿Cómo terminaste?', pills(FEELS, x => m.feel === x, x => { m.feel = m.feel === x ? null : x; touch(); render(); })));
+  out.push(field('¿Dónde leíste?', pills(PLACES, x => m.place === x, x => { m.place = x; touch(); render(); })));
+  out.push(field('¿Algo que notaste?', noteArea(m.note, v => { m.note = v; touch(); }, 'Nota de la sesión')));
+  const saveBtn = h('button', {type: 'button', class: 'btn', id: 'manualSave', onclick: saveManual}, 'Guardar sesión');
+  saveBtn.disabled = !(toInt(m.minutes) > 0);
+  out.push(h('div', {class: 'actions'}, saveBtn,
+    h('button', {type: 'button', class: 'btn-quiet', onclick: () => { state.manual = null; touch(); render(); }}, 'Cancelar')));
+  return out;
+}
+function refreshManualBtn() {
+  const b = document.getElementById('manualSave');
+  if (b && state.manual) b.disabled = !(toInt(state.manual.minutes) > 0);
+}
+function saveManual() {
+  const m = state.manual;
+  const minutes = toInt(m.minutes);
+  if (!(minutes > 0) || !validYmd(m.date)) return;
+  const {y, m: mo, d} = parts(m.date);
+  const startedAt = new Date(y, mo - 1, d, 12, 0, 0).getTime();
+  commitSession({
+    id: 'm' + Date.now(), date: m.date, startedAt, durationMs: minutes * 60000,
+    kind: m.kind, book: m.book, goal: null, pageFrom: toInt(m.pageFrom), pageTo: toInt(m.pageTo),
+    marks: [], counts: {d: toInt(m.d), e: toInt(m.e), s: m.sleep === 'No' ? 0 : 1}, sleep: m.sleep,
+    feel: m.feel || null, place: m.place || null, note: (m.note || '').trim(), manual: true, slept: m.slept || null, moment: m.moment || null
+  });
+  state.manual = null;
+  touch();
+  render();
+  scrollTop();
+  toast('Sesión guardada');
+}
+
+/* ---------- Plan ---------- */
+
+// Valores que las plantillas del plan pueden usar.
+function planVars() {
+  const st = S();
+  const left = Math.round(Math.max(0, (st.totalA || 0) - (st.pageA || 0)) / 50) * 50;
+  return {
+    semanas: st.weeks,
+    inicio: fmtLong(st.start),
+    dias: joinY(WEEK_ORDER.filter(d => st.days.includes(d)).map(d => DAY_PLURAL[d])),
+    descanso: joinY(WEEK_ORDER.filter(d => !st.days.includes(d)).map(d => DAY_PLURAL[d])),
+    diaCafe: st.cafeDay >= 0 ? DAY_LONG[st.cafeDay] : '',
+    base: st.base,
+    paso: st.step,
+    max: st.maxMin,
+    umbral: goodThreshold(),
+    diasSemana: st.days.length,
+    duracion: progression().target,
+    semanasBuenas: Math.round(st.weeks * 2 / 3),
+    libro: bookName('A'),
+    paginasRestantes: left || ''
+  };
+}
+
+function viewPlan() {
+  const plan = state.plan;
+  if (!plan) {
+    return [h('div', {class: 'plan'},
+      h('h1', {class: 'h2', text: 'Tu plan'}),
+      h('p', {class: 'soft prose', text: 'Tu plan personal no viene dentro de la app: vive solo en este teléfono. Cárgalo una vez desde tu archivo de plan (mi-plan.json) y quedará guardado aquí y en tus copias.'}),
+      h('div', {class: 'actions'}, planButton('Cargar mi plan', 'btn'))
+    )];
+  }
+  const vars = planVars();
+  const kids = [];
+  if (plan.titulo) kids.push(h('h1', {class: 'h2', text: fill(plan.titulo, vars)}));
+  if (plan.intro) kids.push(h('p', {class: 'soft prose', text: fill(plan.intro, vars)}));
+  plan.secciones.forEach(x => {
+    if (x.titulo) kids.push(h('h2', {class: 'h3', text: fill(x.titulo, vars)}));
+    if (x.parrafos.length) kids.push(h('div', {class: 'prose'}, ...x.parrafos.map(t => h('p', {text: fill(t, vars)}))));
+    if (x.lista.length) kids.push(h('ul', null, ...x.lista.map(t => h('li', {text: fill(t, vars)}))));
+  });
+  return [h('div', {class: 'plan'}, ...kids)];
+}
+
+function planButton(label, cls) {
+  const inp = h('input', {type: 'file', accept: 'application/json,.json', hidden: true, 'aria-label': 'Archivo del plan'});
+  inp.addEventListener('change', () => { if (inp.files && inp.files[0]) loadPlanFile(inp.files[0]); inp.value = ''; });
+  return [h('button', {type: 'button', class: cls, onclick: () => inp.click()}, label), inp];
+}
+// Al cargar un plan se aplican sus ajustes; la página del libro no retrocede si el libro es el mismo.
+function applyPlanSettings(raw) {
+  if (!raw || typeof raw !== 'object') return;
+  const st = S();
+  const next = normalize({settings: Object.assign({}, st, raw)}).settings;
+  if (next.bookA === st.bookA) next.pageA = Math.max(st.pageA || 0, next.pageA || 0);
+  if (next.bookB === st.bookB) next.pageB = Math.max(st.pageB || 0, next.pageB || 0);
+  state.settings = next;
+}
+function loadPlanFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const obj = JSON.parse(String(reader.result));
+      const plan = normalizePlan(obj);
+      if (!plan) throw new Error('formato');
+      applyPlanSettings(obj.ajustes);
+      state.plan = plan;
+      draft = null;
+      touch();
+      render();
+      toast('Plan cargado');
+    } catch (e) {
+      toast('Ese archivo no es un plan válido');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- Progreso ---------- */
+
+function weeklyChart(p) {
+  const st = S();
+  const n = st.weeks;
+  const W = 360, H = 150, padX = 2, padB = 20, top = 12, gap = 6;
+  const bw = (W - padX * 2 - gap * (n - 1)) / n;
+  const data = [];
+  for (let w = 1; w <= n; w++) {
+    const past = p.weeks.find(x => x.w === w);
+    if (past) data.push({w, mins: past.minutes, cls: past.status});
+    else if (w === p.cur) data.push({w, mins: weekStats(w, p.target).minutes, cls: 'cur'});
+    else data.push({w, mins: 0, cls: 'future'});
+  }
+  const weekGoal = p.target * st.days.length;
+  const maxV = Math.max(weekGoal * 1.15, ...data.map(d => d.mins), 1);
+  const y = v => H - padB - (v / maxV) * (H - padB - top);
+  const svg = sv('svg', {class: 'chart', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Minutos leídos por semana'});
+  data.forEach((d, i) => {
+    const x = padX + i * (bw + gap);
+    const yy = y(d.mins);
+    const hgt = Math.max(d.cls === 'future' ? 1 : 2, H - padB - yy);
+    svg.append(sv('rect', {class: 'b ' + d.cls, x: x.toFixed(1), y: (H - padB - hgt).toFixed(1), width: bw.toFixed(1), height: hgt.toFixed(1), rx: 2}));
+    svg.append(sv('text', {x: (x + bw / 2).toFixed(1), y: H - 5, 'text-anchor': 'middle'}, String(d.w)));
+  });
+  const gy = y(weekGoal).toFixed(1);
+  svg.append(sv('line', {class: 'goal-line', x1: 0, x2: W, y1: gy, y2: gy}));
+  svg.append(sv('text', {x: W - 2, y: (Number(gy) - 4).toFixed(1), 'text-anchor': 'end'}, `meta semanal: ${weekGoal} min`));
+  return svg;
+}
+
+function sessionMeta(x) {
+  const c = countsOf(x);
+  const bits = [];
+  if (x.pageTo > 0 && x.pageFrom >= 0) bits.push(`págs. ${x.pageFrom}–${x.pageTo}`);
+  bits.push(plural(c.d, 'desconexión', 'desconexiones'));
+  bits.push(plural(c.e, 'espejo', 'espejos'));
+  bits.push(x.manual ? `sueño: ${x.sleep || (c.s ? 'sí' : 'no')}` : plural(c.s, 'sueño', 'sueños'));
+  if (x.feel) bits.push(`terminó: ${x.feel.toLowerCase()}`);
+  if (x.moment) bits.push(x.moment.toLowerCase());
+  if (x.slept) bits.push(`durmió ${x.slept.toLowerCase()}`);
+  return bits.join(', ');
+}
+
+function viewProgreso() {
+  const st = S();
+  const p = progression();
+  const out = [];
+  const goodWeeks = p.weeks.filter(x => x.status === 'buena').length;
+  const goodGoal = Math.round(st.weeks * 2 / 3);
+  out.push(h('h1', {class: 'h2', text: 'Progreso'}));
+  if (p.cur < 1) out.push(h('p', {class: 'soft', text: `El bloque empieza el ${fmtLong(st.start)}.`}));
+  else out.push(h('p', {text: `Semana ${Math.min(p.cur, st.weeks)} de ${st.weeks}. Semanas buenas: ${goodWeeks} de las ${goodGoal} que pide el bloque.`}));
+  out.push(h('p', {text: `Duración actual: ${p.target} minutos. ${nextStepText(p)}`}));
+
+  const bookBlock = (name, page, total) => {
+    const pct = total > 0 ? Math.min(100, (page / total) * 100) : 0;
+    return h('div', {class: 'field'},
+      h('p', {class: 'field-label', text: name}),
+      h('div', {class: 'bookbar', 'aria-hidden': 'true'}, h('div', {class: 'bookfill', style: `width:${pct.toFixed(1)}%`})),
+      h('p', {class: 'q-help', text: total > 0 ? `Página ${page} de ${total}` : `Página ${page}`})
+    );
+  };
+  out.push(h('h2', {class: 'h3', text: 'Libros'}));
+  out.push(bookBlock(bookName('A'), st.pageA || 0, st.totalA || 0));
+  if (st.bookB) out.push(bookBlock(bookName('B'), st.pageB || 0, st.totalB || 0));
+
+  out.push(h('h2', {class: 'h3', text: 'Minutos por semana'}));
+  out.push(weeklyChart(p));
+
+  out.push(h('h2', {class: 'h3', text: 'Semanas'}));
+  const wl = h('ul', {class: 'list'});
+  const weekItem = (w, target, ws, status) => {
+    const dates = weekDates(w);
+    const per20 = ws.minutes > 0 ? ((ws.d / ws.minutes) * 20).toFixed(1).replace('.', ',') : null;
+    return h('li', null,
+      h('div', {class: 'li-head'},
+        h('span', {text: `Semana ${w}, ${fmtShort(dates[0])} a ${fmtShort(dates[6])}`}),
+        h('span', {class: 'tag ' + status, text: status === 'cur' ? 'en curso' : status})
+      ),
+      h('p', {class: 'li-meta', text: `${ws.count} de ${st.days.length} completas a ${target} min. ${Math.round(ws.minutes)} min en total${per20 ? `, ${per20} desconexiones cada 20 min` : ''}.`})
+    );
+  };
+  if (p.cur >= 1 && p.cur <= st.weeks) wl.append(weekItem(p.cur, p.target, weekStats(p.cur, p.target), 'cur'));
+  p.weeks.slice().reverse().forEach(wk => wl.append(weekItem(wk.w, wk.target, wk, wk.status)));
+  if (!wl.children.length) wl.append(h('li', {class: 'soft', text: 'Todavía no hay semanas registradas.'}));
+  out.push(wl);
+
+  out.push(h('h2', {class: 'h3', text: 'Sesiones'}));
+  const totalMin = state.sessions.reduce((a, x) => a + minutesOf(x), 0);
+  out.push(h('p', {class: 'soft', text: state.sessions.length ? `${plural(state.sessions.length, 'sesión', 'sesiones')} y ${Math.round(totalMin)} minutos en total.` : 'Tu primera sesión aparecerá aquí.'}));
+  const hl = h('ul', {class: 'list'});
+  state.sessions.slice().reverse().forEach(x => {
+    const wk = weekOf(x.date);
+    const label = `${DAY_SHORT[dowOf(x.date)]} ${fmtShort(x.date)}${wk < 1 ? ' (previa)' : ''}`;
+    hl.append(h('li', null,
+      h('div', {class: 'li-head'},
+        h('span', {text: label}),
+        h('span', {text: `${Math.round(minutesOf(x))} min`})
+      ),
+      h('p', {class: 'li-meta', text: `${bookName(x.book)}, ${KIND_LABEL[x.kind].toLowerCase()}${x.manual ? ', registro manual' : ''}. ${sessionMeta(x)}.`}),
+      x.note ? h('p', {class: 'li-meta', text: `«${x.note}»`}) : null,
+      twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Borrar', 'Toca otra vez para borrarla', () => {
+        state.sessions = state.sessions.filter(s => s.id !== x.id);
+        touch();
+        render();
+      })
+    ));
+  });
+  out.push(hl);
+  return out;
+}
+
+/* ---------- Ajustes ---------- */
+
+function viewAjustes() {
+  const st = S();
+  const out = [];
+  const set = (k, v, rerender) => { st[k] = v; touch(); if (rerender) render(); };
+  out.push(h('h1', {class: 'h2', text: 'Ajustes'}));
+  out.push(h('h2', {class: 'h3', text: 'Tu plan'}));
+  out.push(h('p', {class: 'soft prose', text: state.plan
+    ? `Cargado: «${fill(state.plan.titulo || 'sin título', planVars())}». Si te paso un plan nuevo, cárgalo aquí: se aplican sus ajustes y la página que llevas no retrocede.`
+    : 'Todavía no cargas tu plan. Vive solo en este teléfono: cárgalo desde tu archivo mi-plan.json.'}));
+  out.push(h('div', {class: 'actions'}, planButton(state.plan ? 'Cargar otro plan' : 'Cargar mi plan', 'btn-ghost')));
+  out.push(h('h2', {class: 'h3', text: 'Libro principal'}));
+  out.push(field('Título', textInput(st.bookA, v => set('bookA', v), 'Título del libro principal')));
+  out.push(h('div', {class: 'row'},
+    field('Páginas en total', numInput(st.totalA, v => set('totalA', toInt(v)), 'Páginas en total', 0)),
+    field('Página actual', numInput(st.pageA, v => set('pageA', toInt(v)), 'Página actual', 0))
+  ));
+  out.push(h('h2', {class: 'h3', text: 'Libro B, para descargas'}));
+  out.push(field('Título', textInput(st.bookB, v => set('bookB', v), 'Título del libro B', txt('libroBEjemplo', 'Ej.: un libro ligero')), txt('libroBAyuda', 'Un libro ligero para los días de descarga. Déjalo vacío si todavía no lo tienes.')));
+  out.push(h('div', {class: 'row'},
+    field('Páginas en total', numInput(st.totalB, v => set('totalB', toInt(v)), 'Páginas en total del libro B', 0)),
+    field('Página actual', numInput(st.pageB, v => set('pageB', toInt(v)), 'Página actual del libro B', 0))
+  ));
+  out.push(h('h2', {class: 'h3', text: 'Programa'}));
+  const dateInp = h('input', {type: 'date', class: 'date', 'aria-label': 'Inicio del bloque'});
+  dateInp.value = st.start;
+  dateInp.addEventListener('change', () => { if (validYmd(dateInp.value)) set('start', dateInp.value, true); });
+  out.push(field('Inicio del bloque', dateInp, 'Idealmente un lunes. Las semanas se cuentan desde aquí.'));
+  out.push(field('Duración inicial (minutos)', numInput(st.base, v => { const n = toInt(v); if (n >= 5 && n <= 60) set('base', n); }, 'Duración inicial en minutos', 5)));
+  out.push(field('Días de lectura', pills(WEEK_ORDER, d => st.days.includes(d), d => {
+    let days = st.days.slice();
+    if (days.includes(d)) { if (days.length === 1) return; days = days.filter(x => x !== d); }
+    else days.push(d);
+    st.days = days;
+    if (!days.includes(st.cafeDay)) st.cafeDay = -1;
+    touch();
+    render();
+  }, WEEK_ORDER.map(d => DAY_SHORT[d])), `Semana buena: ${goodThreshold()} de ${st.days.length}.`));
+  const cafeOpts = WEEK_ORDER.filter(d => st.days.includes(d)).concat([-1]);
+  out.push(field('Día de café', pills(cafeOpts, d => st.cafeDay === d, d => set('cafeDay', d, true), cafeOpts.map(d => d === -1 ? 'Ninguno' : DAY_SHORT[d]))));
+  out.push(h('h2', {class: 'h3', text: 'Copia de seguridad y revisión'}));
+  out.push(h('p', {class: 'soft prose', text: 'Tus datos viven solo en este teléfono. Haz una copia de vez en cuando y guárdala en tu Drive o mándatela: si borras la app o los datos del navegador, la copia es lo que te salva.'}));
+  const fileInp = h('input', {type: 'file', accept: 'application/json,.json', hidden: true, 'aria-label': 'Archivo de copia'});
+  fileInp.addEventListener('change', () => { if (fileInp.files && fileInp.files[0]) importBackup(fileInp.files[0]); fileInp.value = ''; });
+  out.push(h('div', {class: 'actions'},
+    h('button', {type: 'button', class: 'btn-ghost', onclick: exportBackup}, 'Exportar copia'),
+    twoTap(h('button', {type: 'button', class: 'btn-ghost'}), 'Importar copia', 'Toca otra vez: reemplaza tus datos', () => fileInp.click()),
+    fileInp
+  ));
+  out.push(h('div', {class: 'actions'}, h('button', {type: 'button', class: 'btn', onclick: copySummary}, 'Copiar resumen para Claude')));
+  out.push(h('p', {class: 'soft prose', text: 'Para las revisiones: copias el resumen y lo pegas en el chat.'}));
+  out.push(h('div', {class: 'actions'},
+    twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Borrar todo el registro', 'Toca otra vez para borrar todo', () => {
+      state = freshState();
+      draft = null;
+      touch();
+      render();
+      scrollTop();
+    })
+  ));
+  return out;
+}
+
+/* ---------- Resumen para Claude ---------- */
+
+function compileText() {
+  const st = S();
+  const p = progression();
+  const L = [];
+  L.push('PLAN DE LECTURA: REGISTRO');
+  L.push('Actualizado: ' + fmtDateTime(state.updatedAt || Date.now()));
+  L.push(`Libro principal: ${st.bookA || 'sin título'}, página ${st.pageA} de ${st.totalA || '?'}`);
+  L.push(`Libro B: ${st.bookB ? `${st.bookB}, página ${st.pageB} de ${st.totalB || '?'}` : 'sin definir'}`);
+  L.push(`Bloque: inicio ${st.start}, ${st.weeks} semanas. Días: ${WEEK_ORDER.filter(d => st.days.includes(d)).map(d => DAY_SHORT[d]).join(', ')}. Café: ${st.cafeDay >= 0 ? DAY_LONG[st.cafeDay] : 'ninguno'}.`);
+  L.push(`Semana actual: ${p.cur}. Duración actual: ${p.target} min. Racha de semanas buenas: ${p.good}. Racha de semanas flojas: ${p.bad}. Descarga pendiente: ${state.flags.descarga ? 'sí' : 'no'}.`);
+  if (state.active) L.push(`Sesión en curso desde ${fmtDateTime(state.active.startedAt)}.`);
+  L.push('', 'SEMANAS');
+  p.weeks.forEach(wk => L.push(`S${wk.w}: ${wk.count}/${st.days.length} completas a ${wk.target} min, ${Math.round(wk.minutes)} min en total, ${wk.d} desconexiones, ${wk.status}`));
+  if (p.cur >= 1) { const ws = weekStats(p.cur, p.target); L.push(`S${p.cur} (en curso): ${ws.count} completas, ${Math.round(ws.minutes)} min, ${ws.d} desconexiones`); }
+  L.push('', 'SESIONES');
+  if (!state.sessions.length) L.push('Ninguna todavía.');
+  state.sessions.forEach(x => {
+    const c = countsOf(x);
+    const times = k => { const t = (x.marks || []).filter(m => m.k === k).map(m => fmtClock(m.t)); return t.length ? ` [${t.join(', ')}]` : ''; };
+    const wk = weekOf(x.date);
+    L.push([
+      `${x.date} (${DAY_SHORT[dowOf(x.date)]}, ${wk < 1 ? 'previa' : 'S' + wk})`,
+      `${KIND_LABEL[x.kind]}${x.manual ? ', manual' : ''}`,
+      bookName(x.book),
+      fmtDur(x.durationMs) + (x.goal ? ` de ${x.goal} min` : ''),
+      `págs ${x.pageFrom || '?'}-${x.pageTo || '?'}`,
+      `desconexiones ${c.d}${times('d')}`,
+      `espejos ${c.e}${times('e')}`,
+      x.manual ? `sueño ${x.sleep || '?'}` : `sueño ${c.s}${times('s')}`,
+      `terminó: ${x.feel || 'sin dato'}`,
+      `momento: ${x.moment || 'sin dato'}`,
+      `durmió: ${x.slept || 'sin dato'}`,
+      x.place || '',
+      x.note ? `nota: ${x.note}` : ''
+    ].filter(Boolean).join(' | '));
+  });
+  return L.join('\n');
+}
+
+/* ---------- Copias y resumen ---------- */
+
+async function exportBackup() {
+  const text = JSON.stringify({app: 'plan-lectura', version: 1, exportedAt: new Date().toISOString(), state}, null, 2);
+  const name = `plan-lectura-${todayStr()}.json`;
+  try {
+    const file = new File([text], name, {type: 'application/json'});
+    const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (coarse && navigator.canShare && navigator.canShare({files: [file]})) {
+      await navigator.share({files: [file], title: 'Copia del plan de lectura'});
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+  }
+  try {
+    const url = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+    const a = h('a', {href: url, download: name});
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    toast('Copia descargada');
+  } catch (e) {
+    toast('No se pudo exportar la copia');
+  }
+}
+function importBackup(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const obj = JSON.parse(String(reader.result));
+      const raw = obj && obj.state && typeof obj.state === 'object' ? obj.state : obj;
+      if (!raw || !Array.isArray(raw.sessions)) throw new Error('formato');
+      state = normalize(raw);
+      state.tab = 'ajustes';
+      draft = null;
+      touch();
+      render();
+      toast('Copia restaurada');
+    } catch (e) {
+      toast('Ese archivo no es una copia válida');
+    }
+  };
+  reader.readAsText(file);
+}
+async function copySummary() {
+  const text = compileText();
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      toast('Resumen copiado: pégalo en el chat');
+      return;
+    }
+  } catch (e) {}
+  const ta = h('textarea', {class: 'ruled', readonly: true, 'aria-label': 'Resumen para Claude'});
+  ta.value = text;
+  main.append(ta);
+  autoGrow(ta);
+  try { ta.focus(); ta.select(); if (document.execCommand && document.execCommand('copy')) { toast('Resumen copiado: pégalo en el chat'); return; } } catch (e) {}
+  toast('Selecciona el texto de abajo y cópialo');
+}
+
+/* ---------- Eventos y arranque ---------- */
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.active) { if (!wake) requestWake(); tick(); }
+});
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => document.querySelectorAll('textarea.ruled').forEach(autoGrow), 150);
+});
+
+state.tab = 'hoy';
+render();
+askPersist();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+})();
+</script>
+</body>
+</html>
