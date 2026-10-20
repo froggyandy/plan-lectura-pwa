@@ -258,6 +258,7 @@ function normalize(raw) {
     ? raw.sessions.filter(x => x && validYmd(x.date) && typeof x.durationMs === 'number' && x.durationMs >= 0)
     : [];
   out.sessions.forEach(x => {
+    x.id = String(x.id || `x${x.startedAt || 0}-${x.date}`).replace(/\//g, '_');
     if (!KINDS.includes(x.kind)) x.kind = 'normal';
     if (x.book !== 'B') x.book = 'A';
     if (!Array.isArray(x.marks)) x.marks = [];
@@ -274,7 +275,7 @@ function normalize(raw) {
   out.manual = raw.manual && typeof raw.manual === 'object' ? raw.manual : null;
   out.flags = Object.assign({descarga: false}, raw.flags && typeof raw.flags === 'object' ? raw.flags : {});
   out.plan = normalizePlan(raw.plan);
-  out.tab =['hoy', 'plan', 'progreso', 'ajustes'].includes(raw.tab) ? raw.tab : 'hoy';
+  out.tab = ['hoy', 'plan', 'progreso', 'ajustes'].includes(raw.tab) ? raw.tab : 'hoy';
   out.updatedAt = typeof raw.updatedAt === 'number' ? raw.updatedAt : 0;
   return out;
 }
@@ -286,7 +287,8 @@ function countMarks(marks) {
 
 /* ---------- Plan personal ---------- */
 
-// El plan (textos y ajustes propios) vive solo en el teléfono: llega desde mi-plan.json y viaja en las copias.
+// El plan (textos y ajustes propios) no viene en el código: llega desde mi-plan.json, viaja en las copias
+// y, con sesión iniciada, se sincroniza en la cuenta.
 function normalizePlan(raw) {
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.secciones)) return null;
   const str = v => (typeof v === 'string' ? v : '');
@@ -328,6 +330,7 @@ const S = () => state.settings;
 function touch() {
   state.updatedAt = Date.now();
   localOk = saveLocal();
+  syncPush();
   renderStatus();
 }
 async function askPersist() {
@@ -338,6 +341,263 @@ async function askPersist() {
     }
   } catch (e) {}
 }
+
+/* ---------- Sincronización (Firebase) ---------- */
+
+// Configuración pública del proyecto de Firebase. No es secreta: lo que protege tus datos son
+// las reglas de Firestore y tu inicio de sesión. null = sin sincronización, todo queda en el dispositivo.
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyAv56rk0AOAIdRS55bSQXTcsXICXkXFUUE',
+  authDomain: 'plan-lectura-43119.firebaseapp.com',
+  projectId: 'plan-lectura-43119',
+  storageBucket: 'plan-lectura-43119.firebasestorage.app',
+  messagingSenderId: '51887583121',
+  appId: '1:51887583121:web:d8912d5f5e401c4bc87430'
+};
+const FIREBASE_VERSION = '12.19.0';
+// Pruebas con los emuladores locales de Firebase: http://localhost:PUERTO/?emulador
+const EMULATOR = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).has('emulador');
+const SYNC_KEY = 'plan-lectura-sync';
+
+// status: off (sin configurar), loading, unavailable (no cargó), out (sin sesión), in (con sesión)
+const cloud = {status: 'off', email: '', error: ''};
+let fb = null;
+let sync = null;
+
+function stableStr(v) {
+  if (Array.isArray(v)) return '[' + v.map(stableStr).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ':' + stableStr(v[k])).join(',') + '}';
+  return JSON.stringify(v === undefined ? null : v);
+}
+const keysDiff = (a, b) => Object.keys(a).filter(k => stableStr(a[k]) !== stableStr(b[k]));
+const planKey = p => (p ? stableStr(p) : '');
+
+async function initCloud() {
+  const config = EMULATOR
+    ? {apiKey: 'demo-key', authDomain: 'demo-plan-lectura.firebaseapp.com', projectId: 'demo-plan-lectura', appId: 'demo'}
+    : FIREBASE_CONFIG;
+  if (!config) return;
+  cloud.status = 'loading';
+  try {
+    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/`;
+    const [P, A, F] = await Promise.all(['app', 'auth', 'firestore'].map(m => import(`${base}firebase-${m}.js`)));
+    const app = P.initializeApp(config);
+    const auth = A.initializeAuth(app, {persistence: [A.indexedDBLocalPersistence, A.browserLocalPersistence]});
+    let db;
+    try {
+      db = F.initializeFirestore(app, {localCache: F.persistentLocalCache({tabManager: F.persistentMultipleTabManager()}), ignoreUndefinedProperties: true});
+    } catch (e) {
+      db = F.initializeFirestore(app, {ignoreUndefinedProperties: true});
+    }
+    if (EMULATOR) {
+      A.connectAuthEmulator(auth, 'http://127.0.0.1:9099', {disableWarnings: true});
+      F.connectFirestoreEmulator(db, '127.0.0.1', 8080);
+      // Solo para pruebas: simular que se pierde y vuelve la conexión.
+      window.planDebug = {offline: () => F.disableNetwork(db), online: () => F.enableNetwork(db)};
+    }
+    fb = {auth, db, A, F};
+    A.onAuthStateChanged(auth, onUser);
+  } catch (e) {
+    cloud.status = 'unavailable';
+    refreshCloudUi();
+  }
+}
+
+function onUser(user) {
+  stopSync();
+  cloud.error = '';
+  if (user) {
+    cloud.status = 'in';
+    cloud.email = user.email || '';
+    startSync(user.uid);
+  } else {
+    cloud.status = 'out';
+    cloud.email = '';
+  }
+  refreshCloudUi();
+}
+function refreshCloudUi() {
+  renderStatus();
+  if (state.tab === 'ajustes') softRender();
+}
+
+function startSync(uid) {
+  const F = fb.F;
+  let meta = {};
+  try { meta = JSON.parse(localStorage.getItem(SYNC_KEY)) || {}; } catch (e) {}
+  const confirmed = new Set(meta.uid === uid && Array.isArray(meta.ids) ? meta.ids : []);
+  sync = {
+    uid, confirmed,
+    ids: new Set(state.sessions.map(x => x.id)),
+    sessionsCol: F.collection(fb.db, 'users', uid, 'sessions'),
+    settingsRef: F.doc(fb.db, 'users', uid, 'meta', 'settings'),
+    planRef: F.doc(fb.db, 'users', uid, 'meta', 'plan'),
+    sBase: null, sTimer: null, pBase: null,
+    pending: {sessions: false, settings: false, plan: false},
+    unsub: []
+  };
+  // Lo que la nube todavía no confirmó (lo de antes de iniciar sesión, o una escritura que no alcanzó a salir) se sube.
+  state.sessions.forEach(x => { if (!confirmed.has(x.id)) cloudWrite('set', F.doc(sync.sessionsCol, x.id), x); });
+  const opts = {includeMetadataChanges: true};
+  sync.unsub.push(
+    F.onSnapshot(sync.sessionsCol, opts, onSessionsSnap, onSyncError),
+    F.onSnapshot(sync.settingsRef, opts, onSettingsSnap, onSyncError),
+    F.onSnapshot(sync.planRef, opts, onPlanSnap, onSyncError)
+  );
+}
+function stopSync() {
+  if (!sync) return;
+  sync.unsub.forEach(u => u());
+  clearTimeout(sync.sTimer);
+  sync = null;
+}
+
+// Cada cambio local (touch) se compara con lo que la nube ya tiene y se sube la diferencia.
+function syncPush() {
+  if (!sync) return;
+  const F = fb.F;
+  const local = new Map(state.sessions.map(x => [x.id, x]));
+  local.forEach((x, id) => {
+    if (!sync.ids.has(id)) { sync.ids.add(id); cloudWrite('set', F.doc(sync.sessionsCol, id), x); }
+  });
+  [...sync.ids].forEach(id => {
+    if (!local.has(id)) { sync.ids.delete(id); sync.confirmed.delete(id); cloudWrite('delete', F.doc(sync.sessionsCol, id)); }
+  });
+  if (sync.sBase !== null && keysDiff(S(), sync.sBase).length) scheduleSettings(800);
+  if (sync.pBase !== null && planKey(state.plan) !== sync.pBase) pushPlan();
+}
+function cloudWrite(kind, ref, data) {
+  const F = fb.F;
+  const p = kind === 'delete' ? F.deleteDoc(ref) : F.setDoc(ref, clone(data), kind === 'merge' ? {merge: true} : {});
+  p.then(() => { if (cloud.error) { cloud.error = ''; refreshCloudUi(); } }).catch(onSyncError);
+}
+function onSyncError(e) {
+  cloud.error = (e && e.code) || 'error';
+  refreshCloudUi();
+}
+
+function onSessionsSnap(snap) {
+  sync.pending.sessions = snap.metadata.hasPendingWrites;
+  renderStatus();
+  // Una caché vacía no significa que la nube esté vacía: se espera la respuesta del servidor.
+  if (snap.metadata.fromCache && snap.empty && state.sessions.length) return;
+  sync.confirmed = new Set(snap.docs.filter(d => !d.metadata.hasPendingWrites).map(d => d.id));
+  try { localStorage.setItem(SYNC_KEY, JSON.stringify({uid: sync.uid, ids: [...sync.confirmed]})); } catch (e) {}
+  const next = normalize({sessions: snap.docs.map(d => d.data())}).sessions;
+  sync.ids = new Set(next.map(x => x.id));
+  if (stableStr(next.map(x => x.id)) === stableStr(state.sessions.map(x => x.id))) return;
+  state.sessions = next;
+  refreshFlags();
+  saveLocal();
+  softRender();
+}
+
+// Ajustes: se combinan campo por campo. Lo que cambiaste aquí y no ha subido gana; el resto viene de la nube.
+function onSettingsSnap(snap) {
+  sync.pending.settings = snap.metadata.hasPendingWrites;
+  renderStatus();
+  if (snap.metadata.hasPendingWrites) return;
+  if (!snap.exists()) {
+    if (snap.metadata.fromCache || sync.sBase !== null) return;
+    sync.sBase = {};
+    scheduleSettings(0);
+    return;
+  }
+  const st = S();
+  const remote = normalize({settings: snap.data()}).settings;
+  const first = sync.sBase === null;
+  const merged = Object.assign({}, remote);
+  if (!first) keysDiff(st, sync.sBase).forEach(k => { merged[k] = st[k]; });
+  else {
+    // Al entrar por primera vez en este dispositivo, la página del libro no retrocede.
+    if (remote.bookA === st.bookA) merged.pageA = Math.max(remote.pageA, st.pageA);
+    if (remote.bookB === st.bookB) merged.pageB = Math.max(remote.pageB, st.pageB);
+  }
+  sync.sBase = remote;
+  const next = normalize({settings: merged}).settings;
+  if (keysDiff(next, remote).length) scheduleSettings(0);
+  if (stableStr(next) === stableStr(st)) return;
+  state.settings = next;
+  saveLocal();
+  softRender();
+}
+function scheduleSettings(ms) {
+  clearTimeout(sync.sTimer);
+  sync.sTimer = setTimeout(pushSettings, ms);
+}
+function pushSettings() {
+  if (!sync) return;
+  sync.sTimer = null;
+  if (sync.sBase === null) return;
+  const cur = clone(S());
+  const changed = {};
+  keysDiff(cur, sync.sBase).forEach(k => { changed[k] = cur[k]; });
+  if (!Object.keys(changed).length) return;
+  sync.sBase = cur;
+  cloudWrite('merge', sync.settingsRef, changed);
+  renderStatus();
+}
+
+// Plan: el documento completo; si la nube no tiene plan y este dispositivo sí, se sube.
+function onPlanSnap(snap) {
+  sync.pending.plan = snap.metadata.hasPendingWrites;
+  renderStatus();
+  if (snap.metadata.hasPendingWrites || (!snap.exists() && snap.metadata.fromCache)) return;
+  const remote = snap.exists() ? normalizePlan(snap.data()) : null;
+  const first = sync.pBase === null;
+  sync.pBase = planKey(remote);
+  if (first && !remote && state.plan) { pushPlan(); return; }
+  if (sync.pBase === planKey(state.plan)) return;
+  state.plan = remote;
+  saveLocal();
+  softRender();
+}
+function pushPlan() {
+  const key = planKey(state.plan);
+  if (key === sync.pBase) return;
+  sync.pBase = key;
+  if (state.plan) cloudWrite('set', sync.planRef, state.plan);
+  else cloudWrite('delete', sync.planRef);
+}
+
+async function cloudSignIn(email, password, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+  try {
+    await fb.A.signInWithEmailAndPassword(fb.auth, email.trim(), password);
+    toast('Sesión iniciada: sincronizando');
+  } catch (e) {
+    const c = (e && e.code) || '';
+    toast(/invalid-credential|wrong-password|user-not-found|invalid-email|missing-password/.test(c) ? 'Correo o contraseña incorrectos'
+      : /network-request-failed/.test(c) ? 'Sin conexión: inténtalo con internet'
+      : /too-many-requests/.test(c) ? 'Demasiados intentos: espera unos minutos'
+      : 'No se pudo iniciar sesión');
+    btn.disabled = false;
+    btn.textContent = 'Iniciar sesión';
+  }
+}
+async function cloudReset(email) {
+  if (!email.trim()) { toast('Escribe tu correo arriba'); return; }
+  try {
+    await fb.A.sendPasswordResetEmail(fb.auth, email.trim());
+    toast('Te envié un correo para cambiar la contraseña');
+  } catch (e) {
+    toast(/network/.test((e && e.code) || '') ? 'Sin conexión: inténtalo con internet' : 'No se pudo enviar el correo');
+  }
+}
+async function cloudSignOut() {
+  if (sync && sync.sTimer) pushSettings();
+  stopSync();
+  try { await fb.A.signOut(fb.auth); } catch (e) {}
+  // Lo de este dispositivo se borra; sigue en la nube y vuelve al iniciar sesión.
+  state = freshState();
+  draft = null;
+  try { localStorage.removeItem(SYNC_KEY); } catch (e) {}
+  touch();
+  render();
+  toast('Sesión cerrada: tus datos siguen en la nube');
+}
+const cloudPending = () => !!sync && (sync.pending.sessions || sync.pending.settings || sync.pending.plan || !!sync.sTimer);
 
 /* ---------- Utilidades de interfaz ---------- */
 
@@ -557,7 +817,23 @@ function render() {
   renderStatus();
 }
 function renderStatus() {
-  statusEl.textContent = localOk ? 'Guardado' : 'Sin guardar';
+  let t;
+  if (!localOk) t = 'Sin guardar';
+  else if (cloud.status === 'off' || cloud.status === 'loading') t = 'Guardado';
+  else if (cloud.status !== 'in') t = 'Solo en este equipo';
+  else if (cloud.error) t = 'Error al sincronizar';
+  else if (!navigator.onLine) t = 'Sin conexión';
+  else if (cloudPending()) t = 'Subiendo…';
+  else t = 'Sincronizado';
+  statusEl.textContent = t;
+}
+// Para cambios que llegan de la nube: si estás escribiendo en un campo, se redibuja al salir de él.
+let renderLater = false;
+function softRender() {
+  const a = document.activeElement;
+  if (a && main.contains(a) && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) { renderLater = true; return; }
+  renderLater = false;
+  render();
 }
 function setTab(tab) {
   if (tab !== 'hoy') draft = null;
@@ -763,6 +1039,10 @@ function commitSession(sess) {
   state.sessions.push(sess);
   state.sessions.sort((a, b) => (a.startedAt || 0) - (b.startedAt || 0));
   updateBookPage(sess);
+  refreshFlags();
+}
+// Toca descarga si la última sesión terminó con ansiedad.
+function refreshFlags() {
   const last = state.sessions[state.sessions.length - 1];
   state.flags.descarga = !!(last && last.feel === 'Con ansiedad');
 }
@@ -873,7 +1153,7 @@ function viewPlan() {
   if (!plan) {
     return [h('div', {class: 'plan'},
       h('h1', {class: 'h2', text: 'Tu plan'}),
-      h('p', {class: 'soft prose', text: 'Tu plan personal no viene dentro de la app: vive solo en este teléfono. Cárgalo una vez desde tu archivo de plan (mi-plan.json) y quedará guardado aquí y en tus copias.'}),
+      h('p', {class: 'soft prose', text: 'Tu plan personal no viene dentro de la app. Cárgalo una vez desde tu archivo de plan (mi-plan.json): queda guardado en este dispositivo, en tus copias y, si iniciaste sesión, en todos tus dispositivos.'}),
       h('div', {class: 'actions'}, planButton('Cargar mi plan', 'btn'))
     )];
   }
@@ -1027,6 +1307,7 @@ function viewProgreso() {
       x.note ? h('p', {class: 'li-meta', text: `«${x.note}»`}) : null,
       twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Borrar', 'Toca otra vez para borrarla', () => {
         state.sessions = state.sessions.filter(s => s.id !== x.id);
+        refreshFlags();
         touch();
         render();
       })
@@ -1042,11 +1323,14 @@ function viewAjustes() {
   const st = S();
   const out = [];
   const set = (k, v, rerender) => { st[k] = v; touch(); if (rerender) render(); };
+  const online = cloud.status === 'in';
   out.push(h('h1', {class: 'h2', text: 'Ajustes'}));
+  out.push(...cloudSection());
   out.push(h('h2', {class: 'h3', text: 'Tu plan'}));
   out.push(h('p', {class: 'soft prose', text: state.plan
     ? `Cargado: «${fill(state.plan.titulo || 'sin título', planVars())}». Si te paso un plan nuevo, cárgalo aquí: se aplican sus ajustes y la página que llevas no retrocede.`
-    : 'Todavía no cargas tu plan. Vive solo en este teléfono: cárgalo desde tu archivo mi-plan.json.'}));
+    : online ? 'Todavía no cargas tu plan: cárgalo desde tu archivo mi-plan.json y llegará a todos tus dispositivos.'
+    : 'Todavía no cargas tu plan. Cárgalo desde tu archivo mi-plan.json.'}));
   out.push(h('div', {class: 'actions'}, planButton(state.plan ? 'Cargar otro plan' : 'Cargar mi plan', 'btn-ghost')));
   out.push(h('h2', {class: 'h3', text: 'Libro principal'}));
   out.push(field('Título', textInput(st.bookA, v => set('bookA', v), 'Título del libro principal')));
@@ -1078,18 +1362,20 @@ function viewAjustes() {
   const cafeOpts = WEEK_ORDER.filter(d => st.days.includes(d)).concat([-1]);
   out.push(field('Día de café', pills(cafeOpts, d => st.cafeDay === d, d => set('cafeDay', d, true), cafeOpts.map(d => d === -1 ? 'Ninguno' : DAY_SHORT[d]))));
   out.push(h('h2', {class: 'h3', text: 'Copia de seguridad y revisión'}));
-  out.push(h('p', {class: 'soft prose', text: 'Tus datos viven solo en este teléfono. Haz una copia de vez en cuando y guárdala en tu Drive o mándatela: si borras la app o los datos del navegador, la copia es lo que te salva.'}));
+  out.push(h('p', {class: 'soft prose', text: online
+    ? 'Tus datos están en tu cuenta y en cada dispositivo donde inicies sesión. Igual conviene una copia de vez en cuando, guardada en tu Drive.'
+    : 'Tus datos viven solo en este dispositivo. Haz una copia de vez en cuando y guárdala en tu Drive o mándatela: si borras la app o los datos del navegador, la copia es lo que te salva.'}));
   const fileInp = h('input', {type: 'file', accept: 'application/json,.json', hidden: true, 'aria-label': 'Archivo de copia'});
   fileInp.addEventListener('change', () => { if (fileInp.files && fileInp.files[0]) importBackup(fileInp.files[0]); fileInp.value = ''; });
   out.push(h('div', {class: 'actions'},
     h('button', {type: 'button', class: 'btn-ghost', onclick: exportBackup}, 'Exportar copia'),
-    twoTap(h('button', {type: 'button', class: 'btn-ghost'}), 'Importar copia', 'Toca otra vez: reemplaza tus datos', () => fileInp.click()),
+    twoTap(h('button', {type: 'button', class: 'btn-ghost'}), 'Importar copia', online ? 'Toca otra vez: reemplaza tus datos en todos tus dispositivos' : 'Toca otra vez: reemplaza tus datos', () => fileInp.click()),
     fileInp
   ));
   out.push(h('div', {class: 'actions'}, h('button', {type: 'button', class: 'btn', onclick: copySummary}, 'Copiar resumen para Claude')));
   out.push(h('p', {class: 'soft prose', text: 'Para las revisiones: copias el resumen y lo pegas en el chat.'}));
   out.push(h('div', {class: 'actions'},
-    twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Borrar todo el registro', 'Toca otra vez para borrar todo', () => {
+    twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Borrar todo el registro', online ? 'Toca otra vez: se borra en todos tus dispositivos' : 'Toca otra vez para borrar todo', () => {
       state = freshState();
       draft = null;
       touch();
@@ -1097,6 +1383,38 @@ function viewAjustes() {
       scrollTop();
     })
   ));
+  return out;
+}
+
+function cloudSection() {
+  if (cloud.status === 'off') return [];
+  const out = [h('h2', {class: 'h3', text: 'Sincronización'})];
+  if (cloud.status === 'loading') {
+    out.push(h('p', {class: 'soft prose', text: 'Conectando…'}));
+  } else if (cloud.status === 'unavailable') {
+    out.push(h('p', {class: 'soft prose', text: 'La sincronización no está disponible ahora, quizá por falta de conexión. Tus datos se guardan en este dispositivo; abre la app con internet para sincronizar.'}));
+  } else if (cloud.status === 'out') {
+    out.push(h('p', {class: 'soft prose', text: 'Inicia sesión para que tus sesiones, ajustes y plan se sincronicen en todos tus dispositivos. Lo que ya tengas en este dispositivo se sube al entrar.'}));
+    const email = h('input', {type: 'email', class: 'line', autocomplete: 'username', 'aria-label': 'Correo'});
+    const pass = h('input', {type: 'password', class: 'line', autocomplete: 'current-password', 'aria-label': 'Contraseña'});
+    const submit = h('button', {type: 'submit', class: 'btn'}, 'Iniciar sesión');
+    out.push(h('form', {onsubmit: e => { e.preventDefault(); cloudSignIn(email.value, pass.value, submit); }},
+      field('Correo', email),
+      field('Contraseña', pass),
+      h('div', {class: 'actions'}, submit, h('button', {type: 'button', class: 'btn-quiet', onclick: () => cloudReset(email.value)}, 'Olvidé mi contraseña'))
+    ));
+  } else {
+    out.push(h('p', {class: 'soft prose', text: `Conectado como ${cloud.email}. Tus sesiones, ajustes y plan se sincronizan solos entre tus dispositivos; sin conexión se guardan aquí y suben al volver la señal.`}));
+    if (cloud.error) {
+      out.push(h('div', {class: 'banner'}, h('p', {text: cloud.error === 'permission-denied'
+        ? 'La nube rechazó los cambios (permiso denegado): revisa las reglas de Firestore. Tus datos siguen guardados aquí.'
+        : 'No se pudo sincronizar. Se reintenta solo; tus datos siguen guardados aquí.'})));
+    }
+    out.push(h('div', {class: 'actions'},
+      twoTap(h('button', {type: 'button', class: 'btn-quiet'}), 'Cerrar sesión en este dispositivo',
+        cloudPending() ? 'Toca otra vez: hay cambios sin subir' : 'Toca otra vez: tus datos siguen en la nube', cloudSignOut)
+    ));
+  }
   return out;
 }
 
@@ -1216,9 +1534,14 @@ window.addEventListener('resize', () => {
   resizeTimer = setTimeout(() => document.querySelectorAll('textarea.ruled').forEach(autoGrow), 150);
 });
 
+main.addEventListener('focusout', () => { if (renderLater) setTimeout(softRender, 0); });
+window.addEventListener('online', renderStatus);
+window.addEventListener('offline', renderStatus);
+
 state.tab = 'hoy';
 render();
 askPersist();
+initCloud();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }

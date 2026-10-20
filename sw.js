@@ -1,7 +1,8 @@
 // Service worker del plan de lectura.
 // Para forzar que los teléfonos descarguen todo de nuevo tras un cambio, sube el número de versión.
-const CACHE = 'plan-lectura-v1';
+const CACHE = 'plan-lectura-v2';
 const FONT_CACHE = 'plan-lectura-fuentes';
+const SDK_CACHE = 'plan-lectura-firebase';
 const ASSETS = [
   './',
   './index.html',
@@ -19,7 +20,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== FONT_CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== FONT_CACHE && k !== SDK_CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -53,6 +54,18 @@ self.addEventListener('fetch', event => {
         }
         return res;
       }))
+    );
+    return;
+  }
+
+  // SDK de Firebase: cada versión tiene su propia URL y nunca cambia, así que basta la copia guardada.
+  // Sin esto la app no podría sincronizar después de abrirse sin conexión.
+  if (url.hostname === 'www.gstatic.com' && url.pathname.startsWith('/firebasejs/')) {
+    event.respondWith(
+      caches.open(SDK_CACHE).then(cache => cache.match(req).then(hit => hit || fetch(req).then(res => {
+        if (res.ok) cache.put(req, res.clone());
+        return res;
+      })))
     );
     return;
   }
