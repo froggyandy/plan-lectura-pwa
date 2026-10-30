@@ -1,0 +1,1519 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>План чтения</title>
+<meta name="description" content="Личный план чтения: две полки, решения вместо «сдаюсь», цели.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Чтение">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F3F5F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1729" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;700&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&display=swap">
+<style>
+:root{
+  --paper:#F3F5F2;--surface:#FFFFFF;--ink:#1D2B53;--ink-soft:#56617F;--rule:#C3CFE3;--rule-soft:#DCE3EE;
+  --margin:#B93D38;--hi:#FFE35A;--hi-ink:#1D2B53;--coral:#E8836F;--focus:#2B59C3;
+  --serif:"Literata","PT Serif","Iowan Old Style",Georgia,serif;
+  --sans:"Golos Text","PT Sans","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1729;--surface:#162038;--ink:#E6EAF4;--ink-soft:#A3ADC7;--rule:#33426A;--rule-soft:#222E4A;
+    --margin:#F08F86;--hi:#E9D14A;--hi-ink:#0F1729;--coral:#E8836F;--focus:#93B2FF;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1729;--surface:#162038;--ink:#E6EAF4;--ink-soft:#A3ADC7;--rule:#33426A;--rule-soft:#222E4A;
+  --margin:#F08F86;--hi:#E9D14A;--hi-ink:#0F1729;--coral:#E8836F;--focus:#93B2FF;color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{background:var(--paper);scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:1rem;line-height:1.5}
+button,input,textarea{font-family:inherit}
+[hidden]{display:none!important}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--rule-soft)}
+.top-in{max-width:44rem;margin:0 auto;padding:.6rem 1.25rem .2rem;display:flex;align-items:baseline;gap:.8rem}
+.brand{flex:1;min-width:0;margin:0;font-family:var(--serif);font-weight:600;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{font-size:.8rem;color:var(--ink-soft);white-space:nowrap}
+.tabs{max-width:44rem;margin:0 auto;padding:0 1.25rem;display:flex;gap:.2rem}
+.tab{flex:1;font-size:.95rem;font-weight:700;color:var(--ink-soft);background:none;border:0;border-bottom:3px solid transparent;padding:.55rem .2rem .45rem;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--hi)}
+
+main{max-width:44rem;margin:0 auto;padding:0 1.25rem 4rem}
+.kicker{font-size:.92rem;color:var(--ink-soft);margin:1.5rem 0 .2rem}
+.h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,5.2vw,2.1rem);line-height:1.15;margin:1.5rem 0 .5rem}
+.h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;line-height:1.3;margin:2rem 0 .5rem}
+.soft{color:var(--ink-soft)}
+.small{font-size:.9rem}
+.prose{max-width:36rem}
+.prose p{margin:0 0 .9rem}
+.plan ul{padding-left:1.15rem;margin:.3rem 0 0;max-width:36rem}
+.plan li{margin:.5rem 0}
+.plan li::marker{color:var(--margin)}
+
+/* Неделя */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:.3rem;margin:.7rem 0 .3rem;max-width:26rem}
+.day{display:flex;flex-direction:column;align-items:center;gap:.25rem}
+.dl{font-size:.75rem;color:var(--ink-soft)}
+.dn{position:relative;isolation:isolate;width:2.3rem;height:2.3rem;display:grid;place-items:center;font-family:var(--serif);font-size:1rem;border-radius:50%;border:1px solid var(--rule);color:var(--ink)}
+.day.done .dn{border-color:transparent;color:var(--hi-ink)}
+.day.done .dn::before{content:"";position:absolute;inset:5px -3px;z-index:-1;background:var(--hi);border-radius:4px 10px 5px 11px/11px 5px 10px 4px;transform:skewX(-9deg)}
+.day.today .dl{color:var(--margin);font-weight:700}
+.day.future .dn{opacity:.45}
+
+/* Цели */
+.goal{margin:1rem 0 .2rem;max-width:30rem}
+.goal-line{display:flex;justify-content:space-between;gap:1rem;align-items:baseline}
+.goal-num{font-family:var(--serif);font-size:1.35rem;font-weight:600}
+.bar{height:8px;background:var(--rule-soft);border-radius:4px;overflow:hidden;margin:.35rem 0 .15rem}
+.bar > span{display:block;height:100%;background:var(--hi)}
+
+/* Карточки */
+.card{background:var(--surface);border:1px solid var(--rule-soft);border-radius:.7rem;padding:1rem 1.05rem;margin:.8rem 0;max-width:36rem}
+.card.alert{border-left:4px solid var(--margin)}
+.card h3{font-family:var(--serif);font-weight:600;font-size:1.15rem;line-height:1.3;margin:0}
+.card .meta{color:var(--ink-soft);font-size:.9rem;margin:.15rem 0 0}
+.card > p:last-child{margin-bottom:0}
+.shelf-title{display:flex;align-items:baseline;gap:.6rem;margin:1.8rem 0 .2rem}
+.shelf-title h2{margin:0}
+.tag{font-size:.78rem;padding:.08rem .5rem;border-radius:.3rem;border:1px solid var(--rule);white-space:nowrap;color:var(--ink-soft)}
+.tag.hi{background:var(--hi);border-color:transparent;color:var(--hi-ink)}
+.tag.warn{border-color:var(--margin);color:var(--margin)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:flex-end;margin-top:.7rem}
+
+/* Поля */
+.field{margin:1rem 0}
+.field-label{font-family:var(--serif);font-size:1.02rem;font-weight:500;margin:0 0 .4rem}
+.q-help{font-size:.88rem;color:var(--ink-soft);margin:.25rem 0 0}
+.num,.line,.date{font:inherit;font-size:1.05rem;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);border-radius:0;padding:.4rem .1rem}
+.num{width:6.5rem}
+.line{width:100%;max-width:30rem}
+.num:focus,.line:focus,.date:focus{outline:none;border-bottom:2px solid var(--focus);padding-bottom:calc(.4rem - 1px)}
+.ruled{--lh:1.8rem;display:block;width:100%;max-width:36rem;font:inherit;font-size:1rem;line-height:var(--lh);color:var(--ink);background-color:transparent;background-image:linear-gradient(to bottom,transparent calc(var(--lh) - 1px),var(--rule) calc(var(--lh) - 1px),var(--rule) var(--lh));background-size:100% var(--lh);background-attachment:local;border:0;border-radius:0;padding:0 .15rem;resize:none;overflow:hidden;min-height:calc(var(--lh) * 3)}
+.ruled.tall{min-height:calc(var(--lh) * 7)}
+.ruled:focus{outline:2px solid var(--focus);outline-offset:5px}
+::placeholder{color:var(--ink-soft);opacity:.7}
+
+.opts{display:flex;flex-wrap:wrap;gap:.45rem}
+.opt{position:relative;isolation:isolate;font-size:.95rem;line-height:1.3;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:.45rem;padding:.55rem .8rem;min-height:2.6rem;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent}
+.opt::before{content:"";position:absolute;inset:3px -2px;z-index:-1;background:var(--hi);border-radius:3px 9px 4px 10px/10px 4px 9px 3px;transform:skewX(-9deg) scaleX(0);transform-origin:left center;transition:transform .2s cubic-bezier(.3,.7,.4,1)}
+.opt[aria-pressed="true"]{border-color:transparent;color:var(--hi-ink)}
+.opt[aria-pressed="true"]::before{transform:skewX(-9deg) scaleX(1)}
+
+.btn{font-size:1rem;font-weight:700;color:var(--paper);background:var(--ink);border:0;border-radius:.5rem;padding:.8rem 1.2rem;cursor:pointer;line-height:1.25}
+.btn[disabled],.btn-ghost[disabled]{opacity:.4;cursor:not-allowed}
+.btn-ghost{font-size:.95rem;font-weight:700;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:.5rem;padding:.65rem 1rem;cursor:pointer;line-height:1.25}
+.btn-quiet{font-size:.92rem;color:var(--ink-soft);background:none;border:0;padding:.4rem 0;text-decoration:underline;text-underline-offset:.2em;cursor:pointer}
+.btn-quiet.danger{color:var(--margin)}
+.actions{display:flex;flex-wrap:wrap;gap:.7rem 1rem;align-items:center;margin:1rem 0}
+.opt:focus-visible,.btn:focus-visible,.btn-ghost:focus-visible,.btn-quiet:focus-visible,.tab:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+.clock{font-family:var(--serif);font-size:clamp(3.4rem,16vw,5.4rem);font-weight:500;font-variant-numeric:tabular-nums;line-height:1;margin:1rem 0 .5rem}
+.goalbar{height:6px;background:var(--rule-soft);border-radius:3px;overflow:hidden;max-width:30rem}
+.goalfill{height:100%;width:0;background:var(--hi);transition:width .9s linear}
+.list{list-style:none;padding:0;margin:.4rem 0;max-width:36rem}
+.list li{padding:.8rem 0;border-top:1px solid var(--rule-soft)}
+.li-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
+.li-title{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.details{margin-top:.6rem;padding:.2rem 0 .2rem .9rem;border-left:2px solid var(--rule)}
+
+.toast{position:fixed;left:50%;bottom:calc(1.2rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:calc(100% - 2rem);background:var(--ink);color:var(--paper);padding:.6rem 1rem;border-radius:.5rem;font-size:.92rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <p class="brand">План чтения</p>
+    <span class="status" id="status"></span>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Разделы">
+    <button type="button" class="tab" role="tab" data-tab="today">Сегодня</button>
+    <button type="button" class="tab" role="tab" data-tab="books">Книги</button>
+    <button type="button" class="tab" role="tab" data-tab="plan">План</button>
+    <button type="button" class="tab" role="tab" data-tab="more">Ещё</button>
+  </nav>
+</header>
+<main id="main"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- Константы и даты ---------- */
+
+const pad2 = n => String(n).padStart(2, '0');
+const DAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const MONTHS_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const SHELF = {metro: 'В метро', desk: 'За столом'};
+const STATUS_LABEL = {undecided: 'Нужно решение', reading: 'Читаю', paused: 'На паузе', wish: 'Хочу прочитать', done: 'Прочитана', setaside: 'Отпущена'};
+const STATUS_ORDER = ['undecided', 'reading', 'paused', 'wish', 'done', 'setaside'];
+const PAGE_FORMS = ['страница', 'страницы', 'страниц'];
+const BOOK_FORMS = ['книга', 'книги', 'книг'];
+
+function ruPlural(n, forms) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return forms[2];
+  if (b > 1 && b < 5) return forms[1];
+  if (b === 1) return forms[0];
+  return forms[2];
+}
+const toInt = v => { const n = parseInt(v, 10); return Number.isNaN(n) ? 0 : n; };
+function ymd(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+const todayStr = () => ymd(new Date());
+function parts(s) { const [y, m, d] = String(s).split('-').map(Number); return {y, m, d}; }
+function dayNum(s) { const {y, m, d} = parts(s); return Math.round(Date.UTC(y, m - 1, d) / 86400000); }
+function validYmd(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(dayNum(s)); }
+function fromDayNum(n) { const dt = new Date(n * 86400000); return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`; }
+function dowOf(s) { return new Date(dayNum(s) * 86400000).getUTCDay(); }
+const addDays = (s, n) => fromDayNum(dayNum(s) + n);
+function addMonths(s, n) {
+  const {y, m, d} = parts(s);
+  const first = new Date(Date.UTC(y, m - 1 + n, 1));
+  const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+  return `${first.getUTCFullYear()}-${pad2(first.getUTCMonth() + 1)}-${pad2(Math.min(d, last))}`;
+}
+function fmtDay(s) { const {y, m, d} = parts(s); const base = `${d} ${MONTHS_GEN[m - 1]}`; return y === new Date().getFullYear() ? base : `${base} ${y}`; }
+function fmtDateTime(ts) {
+  try { return new Date(ts).toLocaleString('ru-RU', {dateStyle: 'long', timeStyle: 'short'}); }
+  catch (e) { return new Date(ts).toISOString(); }
+}
+function fmtClock(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const hr = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+  return hr ? `${hr}:${pad2(m)}:${pad2(r)}` : `${m}:${pad2(r)}`;
+}
+
+/* ---------- Состояние ---------- */
+
+const STORE_KEY = 'chtenie-v1';
+const newId = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const cleanId = id => String(id).replace(/\//g, '_');
+function makeBook(o) {
+  return Object.assign({
+    id: newId(), title: '', author: '', pages: 0, current: 0, shelf: 'metro', translator: '', shared: false,
+    status: 'reading', note: '', pausedUntil: null, startedOn: null, finishedOn: null, checked50: false, createdAt: Date.now()
+  }, o);
+}
+// seeded: libros del plan que ya se agregaron una vez (para no volver a agregarlos si se borran).
+const freshSettings = () => ({start: todayStr(), goal3m: 7, goalYear: 30, minutes: 45, deskMin: 25, seeded: []});
+const freshState = () => ({v: 1, settings: freshSettings(), books: [], log: [], plan: null, desk: null, tab: 'today', updatedAt: 0});
+const clone = o => JSON.parse(JSON.stringify(o));
+
+function normalizeSettings(raw) {
+  const st = Object.assign(freshSettings(), raw && typeof raw === 'object' ? raw : {});
+  delete st.id;
+  if (!validYmd(st.start)) st.start = todayStr();
+  ['goal3m', 'goalYear', 'minutes', 'deskMin'].forEach(k => { st[k] = Math.max(1, toInt(st[k])); });
+  st.seeded = Array.isArray(st.seeded) ? [...new Set(st.seeded.filter(x => typeof x === 'string'))] : [];
+  return st;
+}
+function normalizeBook(raw) {
+  const book = makeBook(raw);
+  book.id = cleanId(book.id);
+  if (!STATUS_LABEL[book.status]) book.status = 'reading';
+  if (!SHELF[book.shelf]) book.shelf = 'metro';
+  book.pages = Math.max(0, toInt(book.pages));
+  book.current = Math.max(0, toInt(book.current));
+  return book;
+}
+function normalizeLog(raw) {
+  if (!raw || typeof raw !== 'object' || !validYmd(raw.date)) return null;
+  const l = Object.assign({}, raw);
+  l.id = cleanId(l.id || `l${l.at || 0}-${l.bookId || 'x'}`);
+  l.pages = Math.max(0, toInt(l.pages));
+  l.minutes = Math.max(0, toInt(l.minutes));
+  return l;
+}
+const byCreated = (a, b) => (a.createdAt || 0) - (b.createdAt || 0);
+const byAt = (a, b) => (a.at || 0) - (b.at || 0);
+
+function normalize(raw) {
+  const out = freshState();
+  if (!raw || typeof raw !== 'object') return out;
+  out.settings = normalizeSettings(raw.settings);
+  out.books = Array.isArray(raw.books) ? raw.books.filter(b => b && typeof b === 'object').map(normalizeBook).sort(byCreated) : [];
+  out.log = Array.isArray(raw.log) ? raw.log.map(normalizeLog).filter(Boolean).sort(byAt) : [];
+  out.plan = normalizePlan(raw.plan);
+  out.desk = raw.desk && typeof raw.desk === 'object' && ['dump', 'reading', 'end'].includes(raw.desk.phase) ? raw.desk : null;
+  out.tab = ['today', 'books', 'plan', 'more'].includes(raw.tab) ? raw.tab : 'today';
+  out.updatedAt = typeof raw.updatedAt === 'number' ? raw.updatedAt : 0;
+  return out;
+}
+function loadLocal() {
+  try { const raw = localStorage.getItem(STORE_KEY); return raw ? normalize(JSON.parse(raw)) : null; }
+  catch (e) { return null; }
+}
+function saveLocal() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); return true; }
+  catch (e) { return false; }
+}
+
+/* ---------- Личный план ---------- */
+
+// El plan (textos, ajustes y libros iniciales propios) no viene en el código: llega desde un archivo .json,
+// viaja en las copias y, con sesión iniciada, se sincroniza en la cuenta.
+function normalizePlan(raw) {
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.secciones)) return null;
+  const str = v => (typeof v === 'string' ? v : '');
+  const strs = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string') : []);
+  const textos = {};
+  if (raw.textos && typeof raw.textos === 'object') {
+    for (const [k, v] of Object.entries(raw.textos)) if (typeof v === 'string' && v) textos[k] = v;
+  }
+  return {
+    titulo: str(raw.titulo),
+    intro: str(raw.intro),
+    secciones: raw.secciones.filter(x => x && typeof x === 'object').map(x => ({titulo: str(x.titulo), parrafos: strs(x.parrafos), lista: strs(x.lista)})),
+    textos
+  };
+}
+// Plantillas: {var} se reemplaza; {?var: texto} solo aparece si var tiene valor.
+function fill(tpl, vars) {
+  return String(tpl)
+    .replace(/\{\?(\w+):((?:[^{}]|\{\w+\})*)\}/g, (_, k, inner) => (vars[k] ? inner : ''))
+    .replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+}
+const txt = (key, fallback) => (state.plan && state.plan.textos[key]) || fallback;
+
+let state = loadLocal() || freshState();
+let localOk = true;
+const S = () => state.settings;
+function touch() {
+  state.updatedAt = Date.now();
+  localOk = saveLocal();
+  schedulePush();
+  renderStatus();
+}
+async function askPersist() {
+  try {
+    if (navigator.storage && navigator.storage.persist) {
+      const already = navigator.storage.persisted ? await navigator.storage.persisted() : false;
+      if (!already) await navigator.storage.persist();
+    }
+  } catch (e) {}
+}
+
+/* ---------- Синхронизация (Firebase) ---------- */
+
+// Configuración pública del proyecto de Firebase. No es secreta: lo que protege los datos son
+// las reglas de Firestore y el inicio de sesión. null = sin sincronización, todo queda en el dispositivo.
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyAv56rk0AOAIdRS55bSQXTcsXICXkXFUUE',
+  authDomain: 'plan-lectura-43119.firebaseapp.com',
+  projectId: 'plan-lectura-43119',
+  storageBucket: 'plan-lectura-43119.firebasestorage.app',
+  messagingSenderId: '51887583121',
+  appId: '1:51887583121:web:d8912d5f5e401c4bc87430'
+};
+const FIREBASE_VERSION = '12.19.0';
+// Instancia con nombre propio: la sesión y la caché local quedan separadas de la otra app del mismo dominio.
+const FIREBASE_APP_NAME = 'chtenie';
+// Pruebas con los emuladores locales de Firebase: http://localhost:PUERTO/chtenie/?emulador
+const EMULATOR = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).has('emulador');
+const SYNC_KEY = 'chtenie-sync';
+
+// status: off (sin configurar), loading, unavailable (no cargó), out (sin sesión), in (con sesión)
+const cloud = {status: 'off', email: '', error: ''};
+let fb = null;
+let sync = null;
+
+function stableStr(v) {
+  if (Array.isArray(v)) return '[' + v.map(stableStr).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ':' + stableStr(v[k])).join(',') + '}';
+  return JSON.stringify(v === undefined ? null : v);
+}
+const keysDiff = (a, b) => Object.keys(a).filter(k => stableStr(a[k]) !== stableStr(b[k]));
+
+// Lo que se sincroniza, cada cosa en su colección dentro de users/{uid}. Los nombres llevan el prefijo chtenie_
+// para no mezclarse con los de la otra app aunque se use la misma cuenta. La lista de dos minutos y la sesión
+// de mesa en curso (state.desk) no están aquí: nunca salen del teléfono.
+const COLLS = {
+  books: {
+    path: 'chtenie_books',
+    get: () => state.books,
+    set: list => { state.books = list.sort(byCreated); },
+    norm: d => normalizeBook(d),
+    // Primera vez que el mismo libro aparece aquí y en la nube: gana la nube, pero la página no retrocede.
+    first: (mine, remote) => Object.assign({}, remote, {current: Math.max(mine.current || 0, remote.current || 0)})
+  },
+  log: {
+    path: 'chtenie_log',
+    get: () => state.log,
+    set: list => { state.log = list.sort(byAt); },
+    norm: d => normalizeLog(d),
+    first: (mine, remote) => remote
+  },
+  meta: {
+    path: 'chtenie_meta',
+    get: () => [Object.assign({id: 'settings'}, state.settings)].concat(state.plan ? [Object.assign({id: 'plan'}, state.plan)] : []),
+    set: list => {
+      const s = list.find(d => d.id === 'settings');
+      const p = list.find(d => d.id === 'plan');
+      if (s) state.settings = normalizeSettings(s);
+      state.plan = p ? normalizePlan(p) : null;
+    },
+    norm: d => (d.id === 'plan' ? Object.assign({id: 'plan'}, normalizePlan(d)) : Object.assign({id: 'settings'}, normalizeSettings(d))),
+    first: (mine, remote) => remote
+  }
+};
+
+async function initCloud() {
+  const config = EMULATOR
+    ? {apiKey: 'demo-key', authDomain: 'demo-plan-lectura.firebaseapp.com', projectId: 'demo-plan-lectura', appId: 'demo'}
+    : FIREBASE_CONFIG;
+  if (!config) return;
+  cloud.status = 'loading';
+  try {
+    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/`;
+    const [P, A, F] = await Promise.all(['app', 'auth', 'firestore'].map(m => import(`${base}firebase-${m}.js`)));
+    const app = P.initializeApp(config, FIREBASE_APP_NAME);
+    const auth = A.initializeAuth(app, {persistence: [A.indexedDBLocalPersistence, A.browserLocalPersistence]});
+    auth.languageCode = 'ru';
+    let db;
+    try {
+      db = F.initializeFirestore(app, {localCache: F.persistentLocalCache({tabManager: F.persistentMultipleTabManager()}), ignoreUndefinedProperties: true});
+    } catch (e) {
+      db = F.initializeFirestore(app, {ignoreUndefinedProperties: true});
+    }
+    if (EMULATOR) {
+      A.connectAuthEmulator(auth, 'http://127.0.0.1:9099', {disableWarnings: true});
+      F.connectFirestoreEmulator(db, '127.0.0.1', 8080);
+      // Solo para pruebas: simular que se pierde y vuelve la conexión.
+      window.planDebug = {offline: () => F.disableNetwork(db), online: () => F.enableNetwork(db)};
+    }
+    fb = {auth, db, A, F};
+    A.onAuthStateChanged(auth, onUser);
+  } catch (e) {
+    cloud.status = 'unavailable';
+    refreshCloudUi();
+  }
+}
+
+function onUser(user) {
+  stopSync();
+  cloud.error = '';
+  if (user) {
+    cloud.status = 'in';
+    cloud.email = user.email || '';
+    startSync(user.uid);
+  } else {
+    cloud.status = 'out';
+    cloud.email = '';
+  }
+  refreshCloudUi();
+}
+function refreshCloudUi() {
+  renderStatus();
+  if (state.tab === 'more' && !state.desk) softRender();
+}
+
+function startSync(uid) {
+  const F = fb.F;
+  let meta = {};
+  try { meta = JSON.parse(localStorage.getItem(SYNC_KEY)) || {}; } catch (e) {}
+  const known = meta.uid === uid && meta.conf && typeof meta.conf === 'object' ? meta.conf : {};
+  sync = {uid, c: {}, pending: {}, timer: null, unsub: []};
+  Object.entries(COLLS).forEach(([name, C]) => {
+    const conf = new Map(Object.entries(known[name] || {}));
+    sync.c[name] = {
+      ref: F.collection(fb.db, 'users', uid, C.path),
+      conf,                  // última versión que confirmó la nube (se guarda en el teléfono)
+      sent: new Map(conf),   // lo confirmado más lo que ya se envió desde aquí
+      seen: false            // ya respondió el servidor en esta sesión
+    };
+  });
+  // Lo que cambió aquí y la nube no confirmó (sin sesión, sin conexión o antes de que Firebase cargara) sale ahora.
+  pushAll();
+  Object.keys(COLLS).forEach(name => {
+    sync.unsub.push(F.onSnapshot(sync.c[name].ref, {includeMetadataChanges: true}, snap => onSnap(name, snap), onSyncError));
+  });
+}
+function stopSync() {
+  if (!sync) return;
+  sync.unsub.forEach(u => u());
+  clearTimeout(sync.timer);
+  sync = null;
+}
+function saveSyncMeta() {
+  if (!sync) return;
+  const conf = {};
+  Object.keys(COLLS).forEach(name => { conf[name] = Object.fromEntries(sync.c[name].conf); });
+  try { localStorage.setItem(SYNC_KEY, JSON.stringify({uid: sync.uid, conf})); } catch (e) {}
+}
+
+function schedulePush() {
+  if (!sync) return;
+  clearTimeout(sync.timer);
+  sync.timer = setTimeout(pushAll, 600);
+}
+// Compara cada documento con lo último enviado y sube solo los campos que cambiaron.
+function pushAll() {
+  if (!sync) return;
+  clearTimeout(sync.timer);
+  sync.timer = null;
+  const F = fb.F;
+  Object.entries(COLLS).forEach(([name, C]) => {
+    const c = sync.c[name];
+    const local = new Map(C.get().map(d => [d.id, d]));
+    local.forEach((d, id) => {
+      const sent = c.sent.get(id);
+      if (!sent) {
+        // Hasta saber qué tiene la nube, lo nuevo espera: podría existir allí con otra versión.
+        if (!c.seen) return;
+        c.sent.set(id, clone(d));
+        cloudWrite('set', F.doc(c.ref, id), d);
+        return;
+      }
+      const diff = keysDiff(d, sent);
+      if (!diff.length) return;
+      const part = {};
+      diff.forEach(k => { part[k] = d[k]; });
+      c.sent.set(id, clone(d));
+      cloudWrite('merge', F.doc(c.ref, id), part);
+    });
+    [...c.sent.keys()].forEach(id => {
+      if (!local.has(id)) { c.sent.delete(id); cloudWrite('delete', F.doc(c.ref, id)); }
+    });
+  });
+  renderStatus();
+}
+function cloudWrite(kind, ref, data) {
+  const F = fb.F;
+  const p = kind === 'delete' ? F.deleteDoc(ref) : F.setDoc(ref, clone(data), kind === 'merge' ? {merge: true} : {});
+  p.then(() => { if (cloud.error) { cloud.error = ''; refreshCloudUi(); } }).catch(onSyncError);
+}
+function onSyncError(e) {
+  cloud.error = (e && e.code) || 'error';
+  refreshCloudUi();
+}
+
+// Solo cuenta lo que confirma el servidor. Cada documento se combina campo por campo: lo que cambió aquí
+// y aún no subió se queda; lo demás viene de la nube.
+function onSnap(name, snap) {
+  if (!sync) return;
+  const c = sync.c[name], C = COLLS[name];
+  sync.pending[name] = snap.metadata.hasPendingWrites;
+  renderStatus();
+  if (snap.metadata.fromCache) return;
+  c.seen = true;
+  const local = new Map(C.get().map(d => [d.id, d]));
+  const onServer = new Set();
+  let changed = false;
+  snap.docs.forEach(doc => {
+    onServer.add(doc.id);
+    if (doc.metadata.hasPendingWrites) return;
+    const remote = C.norm(Object.assign({}, doc.data(), {id: doc.id}));
+    const mine = local.get(doc.id);
+    const base = c.sent.get(doc.id);
+    c.conf.set(doc.id, remote);
+    c.sent.set(doc.id, remote);
+    let next;
+    if (!mine) {
+      if (base) return;   // se borró aquí y el borrado está por salir
+      next = remote;
+    } else if (!base) {
+      next = C.first(mine, remote);
+    } else {
+      next = Object.assign({}, remote);
+      keysDiff(mine, base).forEach(k => { next[k] = mine[k]; });
+    }
+    if (stableStr(next) !== stableStr(mine)) { local.set(doc.id, next); changed = true; }
+  });
+  // Lo que la nube tenía y ya no tiene se borró en otro dispositivo.
+  [...c.conf.keys()].forEach(id => {
+    if (onServer.has(id)) return;
+    c.conf.delete(id);
+    c.sent.delete(id);
+    if (local.delete(id)) changed = true;
+  });
+  saveSyncMeta();
+  if (changed) {
+    C.set([...local.values()]);
+    saveLocal();
+    softRender();
+  }
+  pushAll();
+}
+const cloudSeen = () => !!sync && Object.values(sync.c).every(c => c.seen);
+const cloudPending = () => !!sync && (Object.values(sync.pending).some(Boolean) || !!sync.timer);
+
+let authView = 'login';     // login | reset | sent
+let authEmail = '';
+let resetCooldownUntil = 0;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function cloudSignIn(email, password, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Входим…';
+  try {
+    await fb.A.signInWithEmailAndPassword(fb.auth, email.trim(), password);
+    authView = 'login';
+    toast('Вы вошли: синхронизируем');
+  } catch (e) {
+    const c = (e && e.code) || '';
+    toast(/invalid-credential|wrong-password|user-not-found|invalid-email|missing-password/.test(c) ? 'Неверный адрес или пароль'
+      : /network-request-failed/.test(c) ? 'Нет интернета. Попробуйте, когда появится сеть'
+      : /too-many-requests/.test(c) ? 'Слишком много попыток. Подождите несколько минут'
+      : 'Не удалось войти');
+    btn.disabled = false;
+    btn.textContent = 'Войти';
+  }
+}
+// Firebase no dice si el correo existe (protección contra enumeración), así que la respuesta siempre es neutra.
+async function sendReset(email, btn, label) {
+  email = (email || '').trim();
+  if (!EMAIL_RE.test(email)) { toast('Проверьте адрес: кажется, в нём ошибка'); return; }
+  if (!navigator.onLine) { toast('Нет интернета. Попробуйте, когда появится сеть'); return; }
+  authEmail = email;
+  btn.disabled = true;
+  btn.textContent = 'Отправляем…';
+  const A = fb.A;
+  try {
+    try {
+      // Tras elegir la contraseña nueva, el botón «Продолжить» vuelve a la app.
+      await A.sendPasswordResetEmail(fb.auth, email, {url: location.origin + location.pathname});
+    } catch (e) {
+      const c = (e && e.code) || '';
+      if (/user-not-found/.test(c)) { /* respuesta neutra */ }
+      else if (/continue-uri|unauthorized-domain/.test(c)) await A.sendPasswordResetEmail(fb.auth, email);
+      else throw e;
+    }
+    resetCooldownUntil = Date.now() + 60000;
+    authView = 'sent';
+    renderKeepScroll();
+  } catch (e) {
+    const c = (e && e.code) || '';
+    toast(/invalid-email|missing-email/.test(c) ? 'Проверьте адрес: кажется, в нём ошибка'
+      : /network-request-failed/.test(c) ? 'Нет интернета. Попробуйте, когда появится сеть'
+      : /too-many-requests/.test(c) ? 'Слишком много попыток. Подождите несколько минут'
+      : 'Не удалось отправить письмо. Попробуйте позже');
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+}
+async function cloudSignOut() {
+  if (sync && sync.timer) pushAll();
+  stopSync();
+  try { await fb.A.signOut(fb.auth); } catch (e) {}
+  // Lo de este dispositivo se borra; sigue en la nube y vuelve al iniciar sesión.
+  state = freshState();
+  state.tab = 'more';
+  try { localStorage.removeItem(SYNC_KEY); } catch (e) {}
+  authView = 'login';
+  touch();
+  render();
+  toast('Вы вышли. Данные остались в облаке');
+}
+
+/* ---------- Утилиты интерфейса ---------- */
+
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  if (props) {
+    for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'text') el.textContent = v;
+      else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : String(v));
+    }
+  }
+  for (const kid of kids.flat()) {
+    if (kid === null || kid === undefined || kid === false) continue;
+    el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+function pills(options, isOn, onPick, labels) {
+  const g = h('div', {class: 'opts', role: 'group'});
+  options.forEach((opt, i) => g.append(h('button', {type: 'button', class: 'opt', 'aria-pressed': String(isOn(opt)), onclick: () => onPick(opt)}, labels ? labels[i] : String(opt))));
+  return g;
+}
+function field(label, control, help) {
+  return h('div', {class: 'field'}, h('p', {class: 'field-label', text: label}), control, help ? h('p', {class: 'q-help', text: help}) : null);
+}
+function numInput(value, onInput, aria) {
+  const inp = h('input', {type: 'number', inputmode: 'numeric', class: 'num', min: '0', 'aria-label': aria});
+  inp.value = value === '' || value == null ? '' : String(value);
+  inp.addEventListener('input', () => onInput(inp.value));
+  return inp;
+}
+function textInput(value, onInput, aria, ph) {
+  const inp = h('input', {type: 'text', class: 'line', 'aria-label': aria, placeholder: ph || ''});
+  inp.value = value || '';
+  inp.addEventListener('input', () => onInput(inp.value));
+  return inp;
+}
+function dateInput(value, onChange, aria) {
+  const inp = h('input', {type: 'date', class: 'date', 'aria-label': aria});
+  inp.value = value || '';
+  inp.addEventListener('change', () => { if (validYmd(inp.value)) onChange(inp.value); });
+  return inp;
+}
+const growQueue = [];
+function noteArea(value, onInput, aria, ph, tall) {
+  const ta = h('textarea', {class: 'ruled' + (tall ? ' tall' : ''), 'aria-label': aria, placeholder: ph || 'Напишите здесь'});
+  ta.value = value || '';
+  ta.addEventListener('input', () => { onInput(ta.value); autoGrow(ta); });
+  growQueue.push(ta);
+  return ta;
+}
+function autoGrow(ta) {
+  if (!ta || !ta.isConnected) return;
+  const lh = parseFloat(getComputedStyle(ta).lineHeight) || 28.8;
+  const min = ta.classList.contains('tall') ? 7 : 3;
+  ta.style.height = 'auto';
+  ta.style.height = (Math.max(min, Math.ceil((ta.scrollHeight - 1) / lh)) * lh) + 'px';
+}
+function twoTap(btn, label, confirmLabel, action) {
+  let armed = false, timer = null;
+  btn.textContent = label;
+  btn.addEventListener('click', () => {
+    if (!armed) {
+      armed = true;
+      btn.textContent = confirmLabel;
+      timer = setTimeout(() => { armed = false; btn.textContent = label; }, 4000);
+    } else {
+      clearTimeout(timer);
+      armed = false;
+      action();
+    }
+  });
+  return btn;
+}
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function scrollTop() { try { window.scrollTo(0, 0); } catch (e) {} }
+function bar(pct) { return h('div', {class: 'bar', 'aria-hidden': 'true'}, h('span', {style: `width:${Math.max(0, Math.min(100, pct)).toFixed(1)}%`})); }
+
+/* ---------- Логика ---------- */
+
+const bookById = id => state.books.find(b => b.id === id);
+const deadline3m = () => addMonths(S().start, 3);
+const deadlineYear = () => addMonths(S().start, 12);
+const finishedBetween = (from, to) => state.books.filter(b => b.status === 'done' && b.finishedOn && b.finishedOn >= from && b.finishedOn < to).length;
+const readOn = date => state.log.some(l => l.date === date && ((l.pages || 0) > 0 || (l.minutes || 0) > 0));
+const pagesOn = date => state.log.filter(l => l.date === date).reduce((a, l) => a + (l.pages || 0), 0);
+function weekDates(date) {
+  const monday = dayNum(date) - ((dowOf(date) + 6) % 7);
+  return Array.from({length: 7}, (_, i) => fromDayNum(monday + i));
+}
+const progressText = b => b.pages ? `стр. ${b.current} из ${b.pages}` : (b.current ? `стр. ${b.current}` : 'не начата');
+const progressPct = b => b.pages ? (b.current / b.pages) * 100 : 0;
+const needs50 = b => b.status === 'reading' && !b.checked50 && b.current >= 50 && (!b.pages || b.current < b.pages);
+const pauseOver = b => b.status === 'paused' && b.pausedUntil && b.pausedUntil <= todayStr();
+
+function logPages(book, newPage, minutes, kind) {
+  const np = Math.max(0, toInt(newPage));
+  const delta = Math.max(0, np - (book.current || 0));
+  book.current = book.pages ? Math.min(np, book.pages) : np;
+  if (!book.startedOn) book.startedOn = todayStr();
+  state.log.push({id: newId(), date: todayStr(), bookId: book.id, pages: delta, minutes: Math.max(0, Math.round(minutes || 0)), kind: kind || 'update', at: Date.now()});
+  return delta;
+}
+function setStatus(book, status, extra) {
+  book.status = status;
+  if (status === 'reading' && !book.startedOn) book.startedOn = todayStr();
+  if (status !== 'paused') book.pausedUntil = null;
+  if (status === 'done') { book.finishedOn = todayStr(); if (book.pages) book.current = book.pages; }
+  if (status !== 'done') book.finishedOn = status === 'done' ? book.finishedOn : null;
+  Object.assign(book, extra || {});
+}
+function finishBook(book) {
+  setStatus(book, 'done');
+  touch();
+  const n = finishedBetween(S().start, deadline3m());
+  toast(`Прочитано! ${n} из ${S().goal3m}`);
+  render();
+}
+function pauseBook(book, until) {
+  setStatus(book, 'paused', {pausedUntil: until});
+  touch();
+  toast(`На паузе до ${fmtDay(until)}`);
+  render();
+}
+function releaseBook(book, note) {
+  setStatus(book, 'setaside', {note: note != null ? note : book.note});
+  touch();
+  toast('Отпущена. Это решение, а не поражение');
+  render();
+}
+function readBook(book, shelf) {
+  setStatus(book, 'reading', shelf ? {shelf} : null);
+  touch();
+  render();
+}
+
+/* ---------- Звук и экран ---------- */
+
+let audioCtx = null;
+function primeAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC && !audioCtx) audioCtx = new AC();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { audioCtx = null; }
+}
+function chime() {
+  try {
+    if (!audioCtx) return;
+    const t0 = audioCtx.currentTime + 0.05;
+    [[660, 0], [880, 0.38]].forEach(([f, dt]) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + dt);
+      g.gain.exponentialRampToValueAtTime(0.22, t0 + dt + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.9);
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.start(t0 + dt);
+      o.stop(t0 + dt + 1);
+    });
+  } catch (e) {}
+  try { if (navigator.vibrate) navigator.vibrate([180, 90, 180]); } catch (e) {}
+}
+let wake = null;
+async function requestWake() {
+  try { if (navigator.wakeLock && navigator.wakeLock.request) wake = await navigator.wakeLock.request('screen'); }
+  catch (e) { wake = null; }
+}
+function releaseWake() { try { if (wake) wake.release(); } catch (e) {} wake = null; }
+
+/* ---------- Отрисовка ---------- */
+
+const main = document.getElementById('main');
+const statusEl = document.getElementById('status');
+let clockTimer = null;
+let openBookId = null;
+let adding = null;
+let pauseDraft = {};
+let releaseDraft = {};
+
+function render() {
+  clearInterval(clockTimer);
+  clockTimer = null;
+  growQueue.length = 0;
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === state.tab)));
+  let nodes;
+  if (state.desk) nodes = viewDesk();
+  else if (state.tab === 'books') nodes = viewBooks();
+  else if (state.tab === 'plan') nodes = viewPlan();
+  else if (state.tab === 'more') nodes = viewMore();
+  else nodes = viewToday();
+  main.replaceChildren(...nodes);
+  requestAnimationFrame(() => growQueue.splice(0).forEach(autoGrow));
+  renderStatus();
+}
+function renderStatus() {
+  let t;
+  if (!localOk) t = 'Не сохранено';
+  else if (cloud.status === 'off' || cloud.status === 'loading') t = 'Сохранено';
+  else if (cloud.status !== 'in') t = 'Только на устройстве';
+  else if (cloud.error) t = 'Ошибка синхронизации';
+  else if (!navigator.onLine) t = 'Нет сети';
+  else if (!cloudSeen()) t = 'Подключение…';
+  else if (cloudPending()) t = 'Синхронизация…';
+  else t = 'Синхронизировано';
+  statusEl.textContent = t;
+}
+// Para cambios que llegan de la nube: si se está escribiendo en un campo, se redibuja al salir de él.
+let renderLater = false;
+function softRender() {
+  const a = document.activeElement;
+  if (a && main.contains(a) && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) { renderLater = true; return; }
+  renderLater = false;
+  const y = window.scrollY || 0;
+  render();
+  try { window.scrollTo(0, y); } catch (e) {}
+}
+function setTab(tab) {
+  state.tab = tab;
+  openBookId = null;
+  adding = null;
+  saveLocal();
+  render();
+  scrollTop();
+}
+
+/* ---------- Сегодня ---------- */
+
+function decisionCard(b) {
+  return h('div', {class: 'card alert'},
+    h('p', {class: 'small soft', text: 'Нужно решение'}),
+    h('h3', {text: b.title}),
+    h('p', {class: 'meta', text: `${b.author ? b.author + ', ' : ''}${progressText(b)}`}),
+    h('p', {class: 'small', text: 'Что с ней делать? Любой вариант — это решение, а не «сдаюсь».'}),
+    h('div', {class: 'actions'},
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => readBook(b, 'metro')}, 'Читать в метро'),
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => readBook(b, 'desk')}, 'Читать за столом'),
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => pauseBook(b, addDays(todayStr(), 30))}, 'Пауза на месяц'),
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => releaseBook(b, '')}, 'Отпустить')
+    )
+  );
+}
+function pauseOverCard(b) {
+  return h('div', {class: 'card alert'},
+    h('p', {class: 'small soft', text: `Пауза закончилась ${fmtDay(b.pausedUntil)}`}),
+    h('h3', {text: b.title}),
+    h('p', {class: 'meta', text: progressText(b)}),
+    h('div', {class: 'actions'},
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => readBook(b)}, 'Вернуться к ней'),
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => pauseBook(b, addDays(todayStr(), 14))}, 'Ещё две недели'),
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => releaseBook(b, '')}, 'Отпустить')
+    )
+  );
+}
+function fiftyCard(b) {
+  return h('div', {class: 'card alert'},
+    h('p', {class: 'small soft', text: 'Правило 50 страниц'}),
+    h('h3', {text: b.title}),
+    h('p', {class: 'small', text: 'Пятьдесят страниц позади. Книга вас захватывает?'}),
+    h('div', {class: 'actions'},
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => { b.checked50 = true; touch(); render(); }}, 'Да, читаю дальше'),
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => releaseBook(b, 'Не захватила за 50 страниц')}, 'Нет, отпускаю')
+    )
+  );
+}
+function bookCard(b) {
+  const pageInp = numInput(b.current, () => {}, 'Текущая страница');
+  return h('div', {class: 'card'},
+    h('div', {class: 'li-head'},
+      h('h3', {text: b.title}),
+      b.shared ? h('span', {class: 'tag hi', text: txt('obshayaTeg', 'вместе')}) : null
+    ),
+    h('p', {class: 'meta', text: [b.author, progressText(b)].filter(Boolean).join(', ')}),
+    b.pages ? bar(progressPct(b)) : null,
+    h('div', {class: 'row'},
+      h('label', {class: 'small soft'}, 'Я на странице ', pageInp),
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => {
+        const delta = logPages(b, pageInp.value, 0, 'update');
+        touch();
+        toast(delta > 0 ? `+${delta} ${ruPlural(delta, PAGE_FORMS)}` : 'Записано');
+        render();
+      }}, 'Записать'),
+      twoTap(h('button', {type: 'button', class: 'btn-quiet'}), 'Дочитано', 'Нажмите ещё раз, чтобы отметить', () => finishBook(b))
+    )
+  );
+}
+
+function viewToday() {
+  const st = S();
+  const today = todayStr();
+  const out = [];
+  out.push(h('p', {class: 'kicker', text: `Сегодня, ${fmtDay(today)}`}));
+
+  const strip = h('div', {class: 'week', role: 'list', 'aria-label': 'Дни с чтением на этой неделе'});
+  weekDates(today).forEach(d => {
+    const done = readOn(d);
+    const cls = ['day', done ? 'done' : '', d === today ? 'today' : '', d > today ? 'future' : ''].filter(Boolean).join(' ');
+    strip.append(h('div', {class: cls, role: 'listitem', 'aria-label': `${fmtDay(d)}: ${done ? 'было чтение' : 'без записи'}`},
+      h('span', {class: 'dl', 'aria-hidden': 'true', text: DAY_SHORT[dowOf(d)]}),
+      h('span', {class: 'dn', 'aria-hidden': 'true', text: String(parts(d).d)})
+    ));
+  });
+  out.push(strip);
+  const todayPages = pagesOn(today);
+  out.push(h('p', {class: 'small soft', text: todayPages ? `Сегодня прочитано ${todayPages} ${ruPlural(todayPages, PAGE_FORMS)}.` : `Ваша норма — около ${st.minutes} минут в день, в метро и дома.`}));
+
+  const d3 = deadline3m(), dy = deadlineYear();
+  const n3 = finishedBetween(st.start, d3), ny = finishedBetween(st.start, dy);
+  out.push(h('div', {class: 'goal'},
+    h('div', {class: 'goal-line'}, h('span', {text: `Цель на три месяца, до ${fmtDay(d3)}`}), h('span', {class: 'goal-num', text: `${n3} из ${st.goal3m}`})),
+    bar((n3 / st.goal3m) * 100)
+  ));
+  out.push(h('div', {class: 'goal'},
+    h('div', {class: 'goal-line'}, h('span', {text: `Цель на год, до ${fmtDay(dy)}`}), h('span', {class: 'goal-num', text: `${ny} из ${st.goalYear}`})),
+    bar((ny / st.goalYear) * 100)
+  ));
+
+  state.books.filter(b => b.status === 'undecided').forEach(b => out.push(decisionCard(b)));
+  state.books.filter(pauseOver).forEach(b => out.push(pauseOverCard(b)));
+  state.books.filter(needs50).forEach(b => out.push(fiftyCard(b)));
+
+  ['metro', 'desk'].forEach(shelf => {
+    const books = state.books.filter(b => b.status === 'reading' && b.shelf === shelf);
+    out.push(h('div', {class: 'shelf-title'},
+      h('h2', {class: 'h2', text: SHELF[shelf]}),
+      h('span', {class: 'small soft', text: shelf === 'metro' ? 'погружение' : 'исследование, с карандашом'})
+    ));
+    if (!books.length) {
+      out.push(h('p', {class: 'small soft'}, shelf === 'metro' ? 'На этой полке пока нет книги. ' : 'Здесь пока нет книги нон-фикшн. ',
+        h('button', {type: 'button', class: 'btn-quiet', onclick: () => { adding = {shelf}; setTabKeep('books'); }}, 'Добавить')));
+    }
+    books.forEach(b => out.push(bookCard(b)));
+    if (shelf === 'desk' && books.length) {
+      out.push(h('div', {class: 'actions'}, h('button', {type: 'button', class: 'btn', onclick: () => startDesk(books[0].id)}, 'Начать чтение за столом')));
+    }
+  });
+  return out;
+}
+function setTabKeep(tab) {
+  state.tab = tab;
+  saveLocal();
+  render();
+  scrollTop();
+}
+
+/* ---------- Чтение за столом ---------- */
+
+// La sesión de mesa (y la lista de dos minutos) vive solo en este teléfono: no se sincroniza.
+function startDesk(bookId) {
+  const b = bookById(bookId);
+  state.desk = {phase: 'dump', bookId, dump: '', startedAt: null, goal: S().deskMin, pageFrom: b ? b.current : 0, chimed: false};
+  touch();
+  render();
+  scrollTop();
+}
+function viewDesk() {
+  const d = state.desk;
+  const deskBooks = state.books.filter(b => b.status === 'reading' && b.shelf === 'desk');
+  const book = bookById(d.bookId) || deskBooks[0];
+  const out = [];
+  if (d.phase === 'dump') {
+    out.push(h('h1', {class: 'h1', text: 'Две минуты: выгрузите голову'}));
+    out.push(h('p', {class: 'prose', text: 'Запишите всё, что крутится в голове: дела, мысли, тревоги. Без порядка и без оценки. Записанное легче отпустить.'}));
+    out.push(noteArea(d.dump, v => { d.dump = v; saveLocal(); }, 'Что крутится в голове', 'Позвонить…, купить…, не забыть…', true));
+    out.push(h('p', {class: 'small soft', text: 'Список не сохраняется после чтения. Если он нужен, скопируйте его.'}));
+    out.push(h('div', {class: 'actions'},
+      h('button', {type: 'button', class: 'btn-quiet', onclick: async () => {
+        try { await navigator.clipboard.writeText(d.dump || ''); toast('Список скопирован'); } catch (e) { toast('Не удалось скопировать'); }
+      }}, 'Скопировать список')
+    ));
+    out.push(h('div', {class: 'card'},
+      h('p', {class: 'small', text: 'Мессенджеры на беззвучный, телефон экраном вниз. Незнакомое слово — пометить карандашом и читать дальше.'})
+    ));
+    if (deskBooks.length > 1) {
+      out.push(field('Книга', pills(deskBooks.map(b => b.id), id => d.bookId === id, id => { d.bookId = id; d.pageFrom = (bookById(id) || {}).current || 0; touch(); render(); }, deskBooks.map(b => b.title))));
+    }
+    out.push(field('Сколько минут', pills([20, 25, 30], m => d.goal === m, m => { d.goal = m; touch(); render(); }, ['20', '25', '30'])));
+    out.push(h('div', {class: 'actions'},
+      h('button', {type: 'button', class: 'btn', onclick: () => {
+        primeAudio();
+        d.phase = 'reading';
+        d.startedAt = Date.now();
+        d.dump = '';
+        d.pageFrom = book ? book.current : 0;
+        touch();
+        render();
+        requestWake();
+        scrollTop();
+      }}, 'Готово, читаю'),
+      twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Отменить', 'Нажмите ещё раз', () => { state.desk = null; touch(); render(); })
+    ));
+  } else if (d.phase === 'reading') {
+    out.push(h('p', {class: 'kicker', text: book ? `${book.title}, с ${d.pageFrom}-й страницы` : 'Чтение за столом'}));
+    out.push(h('p', {class: 'clock', id: 'clock', text: fmtClock(Date.now() - d.startedAt)}));
+    out.push(h('p', {class: 'soft', text: `Цель: ${d.goal} минут`}));
+    out.push(h('div', {class: 'goalbar', 'aria-hidden': 'true'}, h('div', {class: 'goalfill', id: 'goalFill'})));
+    out.push(h('p', {class: 'prose', id: 'reached', hidden: true, text: `${d.goal} минут позади. Можно продолжить или закончить.`}));
+    out.push(h('div', {class: 'actions'},
+      h('button', {type: 'button', class: 'btn', onclick: () => { d.phase = 'end'; d.endedAt = Date.now(); releaseWake(); touch(); render(); scrollTop(); }}, 'Закончить'),
+      twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Отменить', 'Нажмите ещё раз', () => { state.desk = null; releaseWake(); touch(); render(); })
+    ));
+    clockTimer = setInterval(tickDesk, 1000);
+    setTimeout(tickDesk, 0);
+  } else {
+    const mins = Math.round(((d.endedAt || Date.now()) - d.startedAt) / 60000);
+    out.push(h('h1', {class: 'h1', text: `${mins} мин за столом`}));
+    const pageInp = numInput(book ? book.current : 0, () => {}, 'Страница');
+    out.push(field('На какой странице вы остановились?', pageInp));
+    out.push(h('div', {class: 'actions'},
+      h('button', {type: 'button', class: 'btn', onclick: () => {
+        const delta = book ? logPages(book, pageInp.value, mins, 'desk') : 0;
+        if (!book) state.log.push({id: newId(), date: todayStr(), bookId: null, pages: 0, minutes: mins, kind: 'desk', at: Date.now()});
+        state.desk = null;
+        touch();
+        toast(delta > 0 ? `Записано: ${mins} мин, +${delta} ${ruPlural(delta, PAGE_FORMS)}` : `Записано: ${mins} мин`);
+        render();
+        scrollTop();
+      }}, 'Сохранить')
+    ));
+  }
+  return out;
+}
+function tickDesk() {
+  const d = state.desk;
+  if (!d || d.phase !== 'reading') return;
+  const ms = Date.now() - d.startedAt;
+  const el = document.getElementById('clock');
+  if (el) el.textContent = fmtClock(ms);
+  const fill = document.getElementById('goalFill');
+  if (fill) fill.style.width = Math.min(100, (ms / (d.goal * 60000)) * 100) + '%';
+  if (ms >= d.goal * 60000) {
+    const r = document.getElementById('reached');
+    if (r) r.hidden = false;
+    if (!d.chimed) { d.chimed = true; saveLocal(); chime(); }
+  }
+}
+
+/* ---------- Книги ---------- */
+
+function addForm() {
+  const a = adding;
+  const out = h('div', {class: 'card'});
+  out.append(h('h3', {text: 'Новая книга'}));
+  out.append(field('Название', textInput(a.title, v => { a.title = v; refreshAddBtn(); }, 'Название')));
+  out.append(field('Автор', textInput(a.author, v => { a.author = v; }, 'Автор')));
+  out.append(field('Страниц всего', numInput(a.pages, v => { a.pages = toInt(v); }, 'Страниц всего')));
+  out.append(field('Куда', pills(['metro', 'desk', 'wish'], s => a.shelf === s, s => { a.shelf = s; renderKeepScroll(); }, ['В метро', 'За столом', 'Хочу прочитать'])));
+  out.append(field('Переводчик', textInput(a.translator, v => { a.translator = v; }, 'Переводчик', 'Если это перевод'), txt('perevodchikPodskazka', 'Если книга переведена, стоит заранее проверить, чей это перевод.')));
+  out.append(field(txt('obshayaVopros', 'Читаете вместе с кем-то?'), pills([true, false], v => !!a.shared === v, v => { a.shared = v; renderKeepScroll(); }, ['Да', 'Нет'])));
+  const save = h('button', {type: 'button', class: 'btn', id: 'addSave', onclick: () => {
+    if (!a.title || !a.title.trim()) return;
+    const isWish = a.shelf === 'wish';
+    state.books.push(makeBook({
+      title: a.title.trim(), author: (a.author || '').trim(), pages: toInt(a.pages), current: 0,
+      shelf: isWish ? 'metro' : a.shelf, translator: (a.translator || '').trim(), shared: !!a.shared,
+      status: isWish ? 'wish' : 'reading', startedOn: isWish ? null : todayStr()
+    }));
+    adding = null;
+    touch();
+    toast('Книга добавлена');
+    render();
+  }}, 'Добавить');
+  save.disabled = !(a.title && a.title.trim());
+  out.append(h('div', {class: 'actions'}, save, h('button', {type: 'button', class: 'btn-quiet', onclick: () => { adding = null; render(); }}, 'Отмена')));
+  return out;
+}
+function refreshAddBtn() {
+  const b = document.getElementById('addSave');
+  if (b && adding) b.disabled = !(adding.title && adding.title.trim());
+}
+function renderKeepScroll() {
+  const y = window.scrollY || 0;
+  render();
+  try { window.scrollTo(0, y); } catch (e) {}
+}
+
+function bookDetails(b) {
+  const box = h('div', {class: 'details'});
+  const rerender = () => renderKeepScroll();
+  const actions = h('div', {class: 'actions'});
+  if (b.status === 'reading') {
+    actions.append(twoTap(h('button', {type: 'button', class: 'btn-ghost'}), 'Дочитано', 'Нажмите ещё раз', () => finishBook(b)));
+    actions.append(h('button', {type: 'button', class: 'btn-ghost', onclick: () => { b.shelf = b.shelf === 'metro' ? 'desk' : 'metro'; touch(); rerender(); }}, b.shelf === 'metro' ? 'Перенести за стол' : 'Перенести в метро'));
+  }
+  if (['paused', 'setaside', 'done', 'wish', 'undecided'].includes(b.status)) {
+    actions.append(h('button', {type: 'button', class: 'btn-ghost', onclick: () => readBook(b, 'metro')}, b.status === 'wish' ? 'Начать в метро' : 'Читать в метро'));
+    actions.append(h('button', {type: 'button', class: 'btn-ghost', onclick: () => readBook(b, 'desk')}, b.status === 'wish' ? 'Начать за столом' : 'Читать за столом'));
+  }
+  box.append(actions);
+
+  if (['reading', 'undecided', 'paused'].includes(b.status)) {
+    const pd = pauseDraft[b.id] || (pauseDraft[b.id] = addDays(todayStr(), 14));
+    box.append(h('div', {class: 'row'},
+      h('label', {class: 'small soft'}, 'Пауза до ', dateInput(pd, v => { pauseDraft[b.id] = v; }, 'Пауза до')),
+      h('button', {type: 'button', class: 'btn-ghost', onclick: () => pauseBook(b, pauseDraft[b.id] || addDays(todayStr(), 14))}, b.status === 'paused' ? 'Изменить дату' : 'Поставить на паузу')
+    ));
+  }
+  if (['reading', 'undecided', 'paused'].includes(b.status)) {
+    box.append(field('Отпустить сознательно', noteArea(releaseDraft[b.id] || '', v => { releaseDraft[b.id] = v; }, 'Почему', 'Почему (необязательно)')));
+    box.append(h('div', {class: 'actions'}, h('button', {type: 'button', class: 'btn-ghost', onclick: () => releaseBook(b, (releaseDraft[b.id] || '').trim())}, 'Отпустить')));
+  }
+
+  box.append(h('p', {class: 'field-label', style: 'margin-top:1.2rem', text: 'Данные книги'}));
+  box.append(field('Название', textInput(b.title, v => { if (v.trim()) { b.title = v; touch(); } }, 'Название')));
+  box.append(field('Автор', textInput(b.author, v => { b.author = v; touch(); }, 'Автор')));
+  box.append(h('div', {class: 'row'},
+    field('Страниц всего', numInput(b.pages, v => { b.pages = toInt(v); touch(); }, 'Страниц всего')),
+    field('Текущая страница', numInput(b.current, v => { b.current = toInt(v); touch(); }, 'Текущая страница'))
+  ));
+  box.append(field('Переводчик', textInput(b.translator, v => { b.translator = v; touch(); }, 'Переводчик')));
+  box.append(field(txt('obshayaVopros', 'Читаете вместе с кем-то?'), pills([true, false], v => !!b.shared === v, v => { b.shared = v; touch(); rerender(); }, ['Да', 'Нет'])));
+  box.append(h('div', {class: 'actions'}, twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Удалить книгу', 'Нажмите ещё раз, чтобы удалить', () => {
+    state.books = state.books.filter(x => x.id !== b.id);
+    openBookId = null;
+    touch();
+    render();
+  })));
+  return box;
+}
+
+function bookMeta(b) {
+  const bits = [];
+  if (b.author) bits.push(b.author);
+  if (b.status === 'reading') bits.push(SHELF[b.shelf].toLowerCase());
+  if (b.status !== 'wish') bits.push(progressText(b));
+  if (b.status === 'paused' && b.pausedUntil) bits.push(`пауза до ${fmtDay(b.pausedUntil)}`);
+  if (b.status === 'done' && b.finishedOn) bits.push(`прочитана ${fmtDay(b.finishedOn)}`);
+  if (b.translator) bits.push(`пер. ${b.translator}`);
+  if (b.shared) bits.push(txt('obshayaMeta', 'читаем вместе'));
+  return bits.join(', ');
+}
+
+function viewBooks() {
+  const out = [h('h1', {class: 'h1', text: 'Книги'})];
+  if (adding) out.push(addForm());
+  else out.push(h('div', {class: 'actions'}, h('button', {type: 'button', class: 'btn', onclick: () => { adding = {title: '', author: '', pages: '', shelf: 'metro', translator: '', shared: false}; render(); }}, 'Добавить книгу')));
+  STATUS_ORDER.forEach(status => {
+    const list = state.books.filter(b => b.status === status);
+    if (!list.length) return;
+    out.push(h('h2', {class: 'h2', text: `${STATUS_LABEL[status]} (${list.length})`}));
+    const ul = h('ul', {class: 'list'});
+    list.forEach(b => {
+      const open = openBookId === b.id;
+      ul.append(h('li', null,
+        h('div', {class: 'li-head'},
+          h('span', {class: 'li-title', text: b.title}),
+          h('button', {type: 'button', class: 'btn-quiet', 'aria-expanded': String(open), onclick: () => { openBookId = open ? null : b.id; renderKeepScroll(); }}, open ? 'Свернуть' : 'Подробнее')
+        ),
+        h('p', {class: 'small soft', style: 'margin:.15rem 0 0', text: bookMeta(b)}),
+        b.note ? h('p', {class: 'small soft', style: 'margin:.15rem 0 0', text: `«${b.note}»`}) : null,
+        b.status === 'reading' && b.pages ? bar(progressPct(b)) : null,
+        open ? bookDetails(b) : null
+      ));
+    });
+    out.push(ul);
+  });
+  if (!state.books.length && !adding) out.push(h('p', {class: 'small soft', text: 'Книг пока нет. Добавьте первую или загрузите свой план на вкладке «План».'}));
+  return out;
+}
+
+/* ---------- План ---------- */
+
+// Valores que las plantillas del plan pueden usar.
+function planVars() {
+  const st = S();
+  return {
+    minutos: st.minutes,
+    minutosMesa: st.deskMin,
+    meta3m: st.goal3m,
+    metaAnual: st.goalYear,
+    libros3m: `${st.goal3m} ${ruPlural(st.goal3m, BOOK_FORMS)}`,
+    librosAnual: `${st.goalYear} ${ruPlural(st.goalYear, BOOK_FORMS)}`,
+    inicio: fmtDay(st.start),
+    fin3m: fmtDay(deadline3m()),
+    finAnual: fmtDay(deadlineYear())
+  };
+}
+
+function viewPlan() {
+  const plan = state.plan;
+  if (!plan) {
+    return [h('div', {class: 'plan'},
+      h('h1', {class: 'h1', text: 'Ваш план'}),
+      h('p', {class: 'soft prose', text: 'Личный план не встроен в приложение. Загрузите его один раз из файла плана (.json): он сохранится на этом устройстве, в копиях и, если вы вошли в аккаунт, на всех ваших устройствах.'}),
+      h('div', {class: 'actions'}, planButton('Загрузить план', 'btn'))
+    )];
+  }
+  const vars = planVars();
+  const kids = [];
+  if (plan.titulo) kids.push(h('h1', {class: 'h1', text: fill(plan.titulo, vars)}));
+  if (plan.intro) kids.push(h('p', {class: 'soft prose', text: fill(plan.intro, vars)}));
+  plan.secciones.forEach(x => {
+    if (x.titulo) kids.push(h('h2', {class: 'h2', text: fill(x.titulo, vars)}));
+    if (x.parrafos.length) kids.push(h('div', {class: 'prose'}, ...x.parrafos.map(t => h('p', {text: fill(t, vars)}))));
+    if (x.lista.length) kids.push(h('ul', null, ...x.lista.map(t => h('li', {text: fill(t, vars)}))));
+  });
+  return [h('div', {class: 'plan'}, ...kids)];
+}
+
+function planButton(label, cls) {
+  const inp = h('input', {type: 'file', accept: 'application/json,.json', hidden: true, 'aria-label': 'Файл плана'});
+  inp.addEventListener('change', () => { if (inp.files && inp.files[0]) loadPlanFile(inp.files[0]); inp.value = ''; });
+  return [h('button', {type: 'button', class: cls, onclick: () => inp.click()}, label), inp];
+}
+// Al cargar un plan se aplican sus ajustes y se agregan sus libros iniciales una sola vez:
+// el progreso de los libros que ya existen no cambia, y un libro borrado no vuelve.
+function loadPlanFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const obj = JSON.parse(String(reader.result));
+      const plan = normalizePlan(obj);
+      if (!plan) throw new Error('формат');
+      const st = S();
+      const ajustes = obj.ajustes && typeof obj.ajustes === 'object' ? Object.assign({}, obj.ajustes) : {};
+      delete ajustes.seeded;
+      const next = normalizeSettings(Object.assign({}, st, ajustes));
+      let added = 0;
+      (Array.isArray(obj.libros) ? obj.libros : []).forEach(raw => {
+        if (!raw || typeof raw !== 'object' || !raw.id || !raw.title) return;
+        const id = cleanId(raw.id);
+        if (next.seeded.includes(id)) return;
+        next.seeded.push(id);
+        if (bookById(id)) return;
+        state.books.push(normalizeBook(Object.assign({}, raw, {id, createdAt: Date.now() + added})));
+        added += 1;
+      });
+      state.settings = next;
+      state.plan = plan;
+      touch();
+      render();
+      toast(added ? `План загружен. Добавлено ${added} ${ruPlural(added, BOOK_FORMS)}` : 'План загружен');
+    } catch (e) {
+      toast('Этот файл не похож на план');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- Ещё ---------- */
+
+function cloudSection() {
+  if (cloud.status === 'off') return [];
+  const out = [h('h2', {class: 'h2', text: 'Синхронизация'})];
+  if (cloud.status === 'loading') {
+    out.push(h('p', {class: 'small soft', text: 'Подключение…'}));
+  } else if (cloud.status === 'unavailable') {
+    out.push(h('p', {class: 'small soft prose', text: 'Синхронизация сейчас недоступна, возможно, нет интернета. Данные сохраняются на этом устройстве; откройте приложение с интернетом, чтобы синхронизировать.'}));
+  } else if (cloud.status === 'out') {
+    out.push(...(authView === 'login' ? loginView() : resetView()));
+  } else {
+    out.push(h('p', {class: 'small soft prose', text: `Вы вошли как ${cloud.email}. Книги, записи, цели и план синхронизируются между устройствами. Без интернета всё сохраняется здесь и отправится, когда появится сеть.`}));
+    if (cloud.error) {
+      out.push(h('div', {class: 'card alert'}, h('p', {class: 'small', text: cloud.error === 'permission-denied'
+        ? 'Облако отклонило изменения (нет доступа). Данные сохранены на этом устройстве.'
+        : 'Не удалось синхронизировать. Попробуем ещё раз автоматически; данные сохранены на этом устройстве.'})));
+    }
+    out.push(h('div', {class: 'actions'},
+      twoTap(h('button', {type: 'button', class: 'btn-quiet'}), 'Выйти на этом устройстве',
+        cloudPending() || !cloudSeen() ? 'Нажмите ещё раз: есть неотправленные изменения' : 'Нажмите ещё раз: данные останутся в облаке', cloudSignOut)
+    ));
+  }
+  return out;
+}
+function emailInput() {
+  const inp = h('input', {type: 'email', class: 'line', autocomplete: 'username', inputmode: 'email', autocapitalize: 'off', spellcheck: 'false', 'aria-label': 'Электронная почта'});
+  inp.value = authEmail;
+  inp.addEventListener('input', () => { authEmail = inp.value; });
+  return inp;
+}
+function loginView() {
+  const email = emailInput();
+  const pass = h('input', {type: 'password', class: 'line', autocomplete: 'current-password', 'aria-label': 'Пароль'});
+  const submit = h('button', {type: 'submit', class: 'btn'}, 'Войти');
+  return [
+    h('p', {class: 'small soft prose', text: 'Войдите, чтобы книги, записи, цели и план синхронизировались на всех ваших устройствах. То, что уже есть на этом устройстве, при входе добавится в аккаунт.'}),
+    h('form', {onsubmit: e => { e.preventDefault(); cloudSignIn(email.value, pass.value, submit); }},
+      field('Электронная почта', email),
+      field('Пароль', pass),
+      h('div', {class: 'actions'}, submit,
+        h('button', {type: 'button', class: 'btn-quiet', onclick: () => { authView = 'reset'; renderKeepScroll(); }}, 'Забыли пароль?'))
+    )
+  ];
+}
+function resetView() {
+  const back = h('button', {type: 'button', class: 'btn-quiet', onclick: () => { authView = 'login'; renderKeepScroll(); }}, 'Назад ко входу');
+  if (authView === 'sent') {
+    const again = h('button', {type: 'button', class: 'btn-ghost', onclick: () => sendReset(authEmail, again, 'Отправить ещё раз')}, 'Отправить ещё раз');
+    const tick = () => {
+      if (!again.isConnected && tick.started) return;
+      tick.started = true;
+      const s = Math.ceil((resetCooldownUntil - Date.now()) / 1000);
+      again.disabled = s > 0;
+      again.textContent = s > 0 ? `Отправить ещё раз (${s})` : 'Отправить ещё раз';
+      if (s > 0) setTimeout(tick, 1000);
+    };
+    tick();
+    return [
+      h('div', {class: 'card'},
+        h('h3', {text: 'Проверьте почту'}),
+        h('p', {class: 'small', text: `Если адрес ${authEmail} зарегистрирован, на него придёт письмо со ссылкой для нового пароля. Обычно это занимает пару минут. Если письма нет, загляните в папку «Спам».`}),
+        h('p', {class: 'small', text: 'Перейдите по ссылке, задайте новый пароль и вернитесь сюда, чтобы войти с ним.'})
+      ),
+      h('div', {class: 'actions'}, again, back)
+    ];
+  }
+  const email = emailInput();
+  const submit = h('button', {type: 'submit', class: 'btn'}, 'Отправить письмо');
+  return [
+    h('p', {class: 'field-label', text: 'Восстановление пароля'}),
+    h('p', {class: 'small soft prose', text: 'Введите адрес, с которым вы входите. Мы пришлём письмо со ссылкой, по которой можно задать новый пароль.'}),
+    h('form', {onsubmit: e => { e.preventDefault(); sendReset(email.value, submit, 'Отправить письмо'); }},
+      field('Электронная почта', email),
+      h('div', {class: 'actions'}, submit, back)
+    )
+  ];
+}
+
+function viewMore() {
+  const st = S();
+  const online = cloud.status === 'in';
+  const out = [h('h1', {class: 'h1', text: 'Ещё'})];
+  out.push(...cloudSection());
+
+  out.push(h('h2', {class: 'h2', text: 'Ваш план'}));
+  out.push(h('p', {class: 'small soft prose', text: state.plan
+    ? `Загружен: «${fill(state.plan.titulo || 'без названия', planVars())}». Новый план загружается здесь же: его настройки применятся, а прогресс по книгам сохранится.`
+    : 'План ещё не загружен. Загрузите его из файла плана (.json).'}));
+  out.push(h('div', {class: 'actions'}, planButton(state.plan ? 'Загрузить другой план' : 'Загрузить план', 'btn-ghost')));
+
+  out.push(h('h2', {class: 'h2', text: 'Цели'}));
+  out.push(field('Начало плана', dateInput(st.start, v => { st.start = v; touch(); renderKeepScroll(); }, 'Начало плана'), 'От этой даты считаются три месяца и год.'));
+  out.push(h('div', {class: 'row'},
+    field('Книг за три месяца', numInput(st.goal3m, v => { const n = toInt(v); if (n > 0) { st.goal3m = n; touch(); } }, 'Книг за три месяца')),
+    field('Книг за год', numInput(st.goalYear, v => { const n = toInt(v); if (n > 0) { st.goalYear = n; touch(); } }, 'Книг за год'))
+  ));
+  out.push(h('div', {class: 'row'},
+    field('Минут в день', numInput(st.minutes, v => { const n = toInt(v); if (n > 0) { st.minutes = n; touch(); } }, 'Минут в день')),
+    field('Минут за столом', numInput(st.deskMin, v => { const n = toInt(v); if (n >= 5) { st.deskMin = n; touch(); } }, 'Минут за столом'))
+  ));
+
+  out.push(h('h2', {class: 'h2', text: 'Сводка и копия'}));
+  out.push(h('p', {class: 'small soft prose', text: online
+    ? 'Данные хранятся в вашем аккаунте и на каждом устройстве, где вы вошли. Копию всё равно полезно иногда сохранять.'
+    : 'Данные хранятся только на этом устройстве. Время от времени сохраняйте копию: если удалить приложение или данные браузера, копия всё восстановит.'}));
+  out.push(h('div', {class: 'actions'}, h('button', {type: 'button', class: 'btn', onclick: copySummary}, 'Скопировать сводку')));
+  const fileInp = h('input', {type: 'file', accept: 'application/json,.json', hidden: true, 'aria-label': 'Файл копии'});
+  fileInp.addEventListener('change', () => { if (fileInp.files && fileInp.files[0]) importBackup(fileInp.files[0]); fileInp.value = ''; });
+  out.push(h('div', {class: 'actions'},
+    h('button', {type: 'button', class: 'btn-ghost', onclick: exportBackup}, 'Сохранить копию'),
+    twoTap(h('button', {type: 'button', class: 'btn-ghost'}), 'Восстановить из копии', online ? 'Нажмите ещё раз: данные заменятся на всех устройствах' : 'Нажмите ещё раз: данные заменятся', () => fileInp.click()),
+    fileInp
+  ));
+  out.push(h('div', {class: 'actions'}, twoTap(h('button', {type: 'button', class: 'btn-quiet danger'}), 'Удалить все данные', online ? 'Нажмите ещё раз: удалится на всех устройствах' : 'Нажмите ещё раз, чтобы удалить всё', () => {
+    state = freshState();
+    state.tab = 'more';
+    touch();
+    render();
+    scrollTop();
+  })));
+  return out;
+}
+
+/* ---------- Сводка и копии ---------- */
+
+function compileText() {
+  const st = S();
+  const today = todayStr();
+  const L = [];
+  L.push('ПЛАН ЧТЕНИЯ: СВОДКА');
+  L.push('Обновлено: ' + fmtDateTime(state.updatedAt || Date.now()));
+  L.push(`Начало плана: ${st.start}. Цели: ${st.goal3m} книг до ${deadline3m()}, ${st.goalYear} до ${deadlineYear()}. Норма: ${st.minutes} мин в день, за столом ${st.deskMin} мин.`);
+  L.push(`Прочитано: ${finishedBetween(st.start, deadline3m())} из ${st.goal3m} (три месяца), ${finishedBetween(st.start, deadlineYear())} из ${st.goalYear} (год).`);
+  const since = addDays(today, -29);
+  const recent = state.log.filter(l => l.date >= since);
+  const daysRead = new Set(recent.filter(l => (l.pages || 0) > 0 || (l.minutes || 0) > 0).map(l => l.date)).size;
+  const pages30 = recent.reduce((a, l) => a + (l.pages || 0), 0);
+  const desk30 = recent.filter(l => l.kind === 'desk');
+  L.push(`Последние 30 дней: дней с чтением ${daysRead}, страниц ${pages30}, сессий за столом ${desk30.length} (${desk30.reduce((a, l) => a + (l.minutes || 0), 0)} мин).`);
+  L.push('', 'КНИГИ');
+  STATUS_ORDER.forEach(status => {
+    state.books.filter(b => b.status === status).forEach(b => {
+      L.push([
+        `${STATUS_LABEL[status]}: «${b.title}»${b.author ? ' — ' + b.author : ''}`,
+        b.status === 'reading' ? SHELF[b.shelf].toLowerCase() : '',
+        b.status !== 'wish' ? progressText(b) : '',
+        b.pausedUntil ? `пауза до ${b.pausedUntil}` : '',
+        b.finishedOn ? `прочитана ${b.finishedOn}` : '',
+        b.startedOn ? `начата ${b.startedOn}` : '',
+        b.shared ? 'общая' : '',
+        b.translator ? `пер. ${b.translator}` : '',
+        b.note ? `заметка: ${b.note}` : ''
+      ].filter(Boolean).join(' | '));
+    });
+  });
+  L.push('', 'ЗАПИСИ ЗА 30 ДНЕЙ');
+  if (!recent.length) L.push('Нет записей.');
+  recent.forEach(l => {
+    const b = bookById(l.bookId);
+    L.push(`${l.date} (${DAY_SHORT[dowOf(l.date)]}) | ${l.kind === 'desk' ? 'за столом' : 'отметка'} | ${b ? '«' + b.title + '»' : '—'} | +${l.pages || 0} стр.${l.minutes ? ` | ${l.minutes} мин` : ''}`);
+  });
+  return L.join('\n');
+}
+async function copySummary() {
+  const text = compileText();
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); toast('Сводка скопирована'); return; }
+  } catch (e) {}
+  const ta = h('textarea', {class: 'ruled', readonly: true, 'aria-label': 'Сводка'});
+  ta.value = text;
+  main.append(ta);
+  autoGrow(ta);
+  try { ta.focus(); ta.select(); if (document.execCommand && document.execCommand('copy')) { toast('Сводка скопирована'); return; } } catch (e) {}
+  toast('Выделите текст ниже и скопируйте его');
+}
+async function exportBackup() {
+  const text = JSON.stringify({app: 'chtenie', version: 1, exportedAt: new Date().toISOString(), state}, null, 2);
+  const name = `plan-chteniya-${todayStr()}.json`;
+  try {
+    const file = new File([text], name, {type: 'application/json'});
+    const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (coarse && navigator.canShare && navigator.canShare({files: [file]})) {
+      await navigator.share({files: [file], title: 'Копия плана чтения'});
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+  }
+  try {
+    const url = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+    const a = h('a', {href: url, download: name});
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    toast('Копия сохранена');
+  } catch (e) {
+    toast('Не удалось сохранить копию');
+  }
+}
+// Acepta también las copias de la versión anterior de la app (sin sincronización).
+function importBackup(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const obj = JSON.parse(String(reader.result));
+      const raw = obj && obj.state && typeof obj.state === 'object' ? obj.state : obj;
+      if (!raw || !Array.isArray(raw.books)) throw new Error('формат');
+      state = normalize(raw);
+      state.tab = 'more';
+      touch();
+      render();
+      toast('Данные восстановлены');
+    } catch (e) {
+      toast('Этот файл не похож на копию плана');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- Запуск ---------- */
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { if (!state.desk) setTab(t.dataset.tab); else toast('Сначала закончите или отмените чтение за столом'); }));
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.desk && state.desk.phase === 'reading') { if (!wake) requestWake(); tickDesk(); }
+});
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => document.querySelectorAll('textarea.ruled').forEach(autoGrow), 150);
+});
+main.addEventListener('focusout', () => { if (renderLater) setTimeout(softRender, 0); });
+window.addEventListener('online', renderStatus);
+window.addEventListener('offline', renderStatus);
+
+if (!state.updatedAt) touch();
+state.tab = 'today';
+render();
+askPersist();
+initCloud();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+})();
+</script>
+</body>
+</html>

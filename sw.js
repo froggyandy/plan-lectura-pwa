@@ -1,8 +1,12 @@
 // Service worker del plan de lectura.
 // Para forzar que los teléfonos descarguen todo de nuevo tras un cambio, sube el número de versión.
-const CACHE = 'plan-lectura-v3';
-const FONT_CACHE = 'plan-lectura-fuentes';
-const SDK_CACHE = 'plan-lectura-firebase';
+// Comparte dominio con la app de chtenie/: cada una solo toca sus propias cachés (prefijo plan-lectura-).
+const PREFIX = 'plan-lectura-';
+const CACHE = PREFIX + 'v4';
+const FONT_CACHE = PREFIX + 'fuentes';
+const SDK_CACHE = PREFIX + 'firebase';
+// La otra app vive dentro de esta carpeta y tiene su propio service worker: este no la toca.
+const OTHER_APP = new URL('chtenie/', self.registration.scope).href;
 const ASSETS = [
   './',
   './index.html',
@@ -18,16 +22,17 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
+  const keep = [CACHE, FONT_CACHE, SDK_CACHE];
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== FONT_CACHE && k !== SDK_CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k.startsWith(PREFIX) && !keep.includes(k)).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', event => {
   const req = event.request;
-  if (req.method !== 'GET') return;
+  if (req.method !== 'GET' || req.url.startsWith(OTHER_APP)) return;
   const url = new URL(req.url);
 
   // La página: primero la red (para recibir actualizaciones), y la copia guardada si no hay conexión.
@@ -39,7 +44,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE).then(cache => cache.put('./index.html', copy));
           return res;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => caches.match('./index.html', {cacheName: CACHE}))
     );
     return;
   }
@@ -47,7 +52,7 @@ self.addEventListener('fetch', event => {
   // Archivos propios: primero la caché.
   if (url.origin === self.location.origin) {
     event.respondWith(
-      caches.match(req).then(hit => hit || fetch(req).then(res => {
+      caches.match(req, {cacheName: CACHE}).then(hit => hit || fetch(req).then(res => {
         if (res.ok) {
           const copy = res.clone();
           caches.open(CACHE).then(cache => cache.put(req, copy));
